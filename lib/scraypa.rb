@@ -1,7 +1,10 @@
 require "scraypa/version"
 require "scraypa/configuration"
-require "scraypa/visit"
-require "scraypa/response"
+require "scraypa/visit_interface"
+require "scraypa/visit_rest_client"
+require "scraypa/visit_capabara"
+require "scraypa/visit_factory"
+#require "scraypa/response"
 
 module Scraypa
   class << self
@@ -18,6 +21,10 @@ module Scraypa
 
   def self.configure
     yield(configuration)
+  end
+
+  def self.visit params={}
+    Scraypa::VisitFactory.build(@configuration).execute(params)
   end
 
   #TODO: configuration includes:

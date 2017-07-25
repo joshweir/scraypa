@@ -1,10 +1,10 @@
 module Scraypa
   class Configuration
-    attr_accessor :option_1, :option_2
+    attr_accessor :use_javascript, :tor
 
     def initialize
-      @option_1 = nil
-      @option_2 = nil
+      @use_javascript = nil
+      @tor = nil
     end
   end
 end
