@@ -1,5 +1,7 @@
 require "bundler/setup"
 require "scraypa"
+require 'webmock/rspec'
+require 'billy/capybara/rspec'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -8,4 +10,6 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  config.include Capybara::DSL
 end

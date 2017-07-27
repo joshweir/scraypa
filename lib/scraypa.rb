@@ -4,7 +4,7 @@ require "scraypa/visit_interface"
 require "scraypa/visit_rest_client"
 require "scraypa/visit_capabara"
 require "scraypa/visit_factory"
-#require "scraypa/response"
+require "scraypa/response"
 
 module Scraypa
   class << self
@@ -24,7 +24,7 @@ module Scraypa
   end
 
   def self.visit params={}
-    Scraypa::VisitFactory.build(@configuration).execute(params)
+    Scraypa::VisitFactory.build(Scraypa.configuration).execute(params)
   end
 
   #TODO: configuration includes:

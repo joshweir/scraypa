@@ -34,6 +34,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "webmock"
+  spec.add_development_dependency "puffing-billy"
   spec.add_dependency "rest-client"
   spec.add_dependency "useragents"
+  spec.add_dependency "capybara", "~> 2.4.4"
 end
