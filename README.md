@@ -20,7 +20,7 @@ gem 'scraypa'
 
 And then execute:
 
-    $ bundle
+    $ bundle install
 
 Or install it yourself as:
 
@@ -28,19 +28,78 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+    response = Scraypa.visit(method: :get,
+                             url: "http://example.com")
+    
+    #the response.native_response contains the RestClient response object
+    response.native_response.code
+    #-> 200
+    response.native_response.to_str
+    #-> http://example.com content
+    
+By default Scraypa uses the rest-client gem which does
+not support Javascript. The `#visit` method wraps the  
+[`RestClient#execute` method](https://github.com/rest-client/rest-client#passing-advanced-options)
+so you can pass in whatever `RestClient#execute` will accept, 
+for example:
+
+    Scraypa.visit(method: :get, 
+                  url: 'http://example.com/resource',
+                  timeout: 10, 
+                  headers: {params: {foo: 'bar'}})
+                  
+    ➔ GET http://example.com/resource?foo=bar
 
 ### Javascript Support
 
-TODO: Add usage info here
+Capybara is used for Javascript support:
+
+    #configure Scraypa to #use_capybara
+    #and choose your capybara driver, here is poltergeist:
+    Scraypa.configure do |config|
+      config.use_capybara = true
+      config.driver = :poltergeist
+      config.driver_options = {
+          :phantomjs => Phantomjs.path,
+          :js_errors => false,
+          :phantomjs_options => ["--web-security=true"]
+      }
+      
+      #or you could instead use headless_chrome:
+      #config.driver = :headless_chromium
+      #config.driver_options = {
+      #  browser: :chrome,
+      #  desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+      #    "chromeOptions" => {
+      #      "binary" => "/home/resrev/chromium/src/out/Default/chrome",
+      #      "args" => %w{headless no-sandbox disable-gpu}
+      #    }
+      #  )
+      #}
+    end
+    
+    #when using capybara, just the url parameter is required:
+    response = Scraypa.visit(url: "http://example.com")
+    
+    #the response.native_response contains the capybara page object
+    response.native_response.status_code
+    #-> 200
+    response.native_response.text
+    #-> http://example.com content 
+    
+    #execute some javascript:
+    response.native_response.execute_script(
+      "document.getElementsByTagName('body')[0].innerHTML = 'changed content';")
+    response.native_response.text
+    #-> "changed content"
 
 ### Tor
 
-TODO: Add usage info here
+TODO
 
 ### Disguise
 
-TODO: Add usage info here
+TODO
 
 ## Contributing
 

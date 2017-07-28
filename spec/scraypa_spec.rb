@@ -52,6 +52,7 @@ RSpec.describe Scraypa do
         expect(@response.class).to eq(Scraypa::Response)
         expect(@response.native_response.class).to eq(Capybara::Session)
         expect(@response.native_response.text).to match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+        expect(@response.native_response.status_code).to eq(200)
       end
 
       it "should be able to execute javascript" do
