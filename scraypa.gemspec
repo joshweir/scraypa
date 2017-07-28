@@ -38,4 +38,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rest-client"
   spec.add_dependency "useragents"
   spec.add_dependency "capybara", "~> 2.4.4"
+  spec.add_dependency "chromedriver-helper"
 end

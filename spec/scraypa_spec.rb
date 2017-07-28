@@ -29,30 +29,73 @@ RSpec.describe Scraypa do
 
     describe "using Capybara with poltergeist driver (using javascript)" do
       before do
-        proxy.stub('http://www.google.com.au/')
-            .and_return(:text => "test response")
         Scraypa.configure do |config|
           config.use_capybara = true
-          config.driver = :poltergeist_billy
+          config.driver = :poltergeist
           config.driver_options = {
               :phantomjs => Phantomjs.path,
               :js_errors => false,
               :phantomjs_options => ["--web-security=true"]
           }
         end
-        #@response = Scraypa.visit(:url => "http://www.google.com.au/")
-        @response = nil
+        @response = Scraypa.visit(:url => "http://canihazip.com/s")
       end
 
       it "should utilise capybara to download web content" do
-        Capybara.current_driver = :poltergeist_billy
-        Capybara.javascript_driver = :poltergeist_billy
-        visit "http://www.google.com.au/"
-        expect(page.text).to eq('test response')
+        #Capybara.current_driver = :poltergeist_billy
+        #Capybara.javascript_driver = :poltergeist_billy
+        #proxy.stub('http://www.google.com/')
+        #    .and_return(:text => "test response")
+        #visit "http://www.google.com/"
+        #expect(page.text).to eq('test response')
 
         expect(@response.class).to eq(Scraypa::Response)
         expect(@response.native_response.class).to eq(Capybara::Session)
         expect(@response.native_response.text).to match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      end
+
+      it "should be able to execute javascript" do
+        @response.native_response.execute_script(
+            "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
+        expect(@response.native_response.text).to eq('changed')
+      end
+    end
+
+    describe "using Capybara with headless_chromium driver (using javascript)" do
+      before do
+        Scraypa.configure do |config|
+          config.use_capybara = true
+          config.driver = :headless_chromium
+          config.driver_options = {
+              browser: :chrome,
+              desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+                  "chromeOptions" => {
+                      'binary' => "/home/resrev/chromium/src/out/Default/chrome",
+                      'args' => %w{headless no-sandbox disable-gpu}
+                  }
+              )
+          }
+        end
+        @response = Scraypa.visit(:url => "http://canihazip.com/s")
+      end
+
+      it "should utilise capybara to download web content" do
+        #Capybara.current_driver = :poltergeist_billy
+        #Capybara.javascript_driver = :poltergeist_billy
+        #proxy.stub('http://www.google.com/')
+        #    .and_return(:text => "test response")
+        #visit "http://www.google.com/"
+        #expect(page.text).to eq('test response')
+
+        expect(@response.class).to eq(Scraypa::Response)
+        expect(@response.native_response.class).to eq(Capybara::Session)
+        expect(@response.native_response.text).to match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      end
+
+      it "should be able to execute javascript" do
+        @response.native_response.execute_script(
+            "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
+        expect(@response.native_response.text).to eq('changed')
       end
     end
   end

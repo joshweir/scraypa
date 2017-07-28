@@ -1,8 +1,14 @@
 # Scraypa
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/scraypa`. To experiment with that code, run `bin/console` for an interactive prompt.
+Scrape web content with configuration options including: 
+ 
+1. [Javscript support](#javascript-support)
+2. [The Onion Router (Tor)](#tor)
+3. [Disguise](#disguise)
 
-TODO: Delete this and the text above, and describe your gem
+Scraypa is essentially a wrapper for the light-weight 
+[Rest Client](https://github.com/rest-client/rest-client) (if you dont require javascript support)
+ or [Capybara](https://github.com/teamcapybara/capybara) (for Javascript support). 
 
 ## Installation
 
@@ -24,15 +30,21 @@ Or install it yourself as:
 
 TODO: Write usage instructions here
 
-## Development
+### Javascript Support
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+TODO: Add usage info here
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+### Tor
+
+TODO: Add usage info here
+
+### Disguise
+
+TODO: Add usage info here
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/scraypa.
+Bug reports and pull requests are welcome on GitHub at https://github.com/joshweir/scraypa.
 
 
 ## License
