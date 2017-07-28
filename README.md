@@ -12,6 +12,31 @@ Scraypa is essentially a wrapper for the light-weight
 
 ## Installation
 
+### Install Tor (optional)
+
+If you want to use Tor, install tor:
+
+`sudo apt-get install tor`
+
+### Install Headless Chrome (optional)
+
+If you want to use `:headless_chrome` with capybara, install 
+headless chrome by following instructions here: 
+
+http://blog.faraday.io/headless-chromium/
+
+For ubuntu I did this: 
+
+1. Install chromium: 
+
+        git clone https://github.com/scheib/chromium-latest-linux.git
+        cd chromium-latest-linux
+        ./update-and-run.sh
+        
+2. Install chromedriver by [following the build instructions](https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md).
+
+### Install Scraypa
+
 Add this line to your application's Gemfile:
 
 ```ruby
