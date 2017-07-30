@@ -4,6 +4,7 @@ require 'rspec'
 require 'capybara/rspec'
 require 'webmock/rspec'
 require 'billy/capybara/rspec'
+require 'socket'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
