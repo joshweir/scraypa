@@ -1,6 +1,6 @@
 require "spec_helper"
 
-WebMock.disable_net_connect!(allow_localhost: true)
+WebMock.allow_net_connect!(allow_localhost: true)
 
 RSpec.describe Scraypa do
   it "has a version number" do
@@ -37,7 +37,7 @@ RSpec.describe Scraypa do
       it "should utilise rest client to download web content" do
         expect(@response.class).to eq(Scraypa::Response)
         expect(@response.native_response.class).to eq(RestClient::Response)
-        expect(@response.native_response.html).to eq('test response')
+        expect(@response.native_response.to_str).to eq('test response')
       end
     end
 
@@ -114,13 +114,13 @@ RSpec.describe Scraypa do
 
       end
 
-      it "should, on configuration change if use_tor is flagged, " +
+      it "should, on configuration change if use tor is flagged, " +
              "check if a valid Tor god process is not running for the current " +
              "Tor instance settings, then spawn it" do
 
       end
 
-      it "should, on configuration change if use_tor is not flagged, " +
+      it "should, on configuration change if use tor is not flagged, " +
              "check if any Tor god process is running spawned by the current " +
              "process, then issue god stop orders and kill it" do
 
@@ -134,19 +134,22 @@ RSpec.describe Scraypa do
 
     describe "using Capybara with poltergeist driver through Tor" do
       before do
-        @my_ip = Scraypa.reset
-                     .visit("http://bot.whatismyipaddress.com")
-                     .native_reponse.html
+        Scraypa.reset
+        @my_ip = Scraypa
+                     .visit(:method => :get,
+                            url: "http://bot.whatismyipaddress.com")
+                     .native_response.to_str
         @another_ip_check =
-            Scraypa.reset
-             .visit("http://canihazip.com")
-             .native_reponse.html
+            Scraypa
+             .visit(:method => :get,
+                    url: "http://canihazip.com/s")
+             .native_response.to_str
 
         Scraypa.configure do |config|
           config.use_capybara = true
-          config.use_tor = true
+          config.tor = true
           config.tor_options = {
-              port: 9055,
+              tor_port: 9055,
               control_port: 50500
           }
           config.driver = :poltergeist
@@ -156,7 +159,7 @@ RSpec.describe Scraypa do
               :phantomjs_options => ["--web-security=true"]
           }
         end
-        @response = Scraypa.visit("http://canihazip.com/s")
+        @response = Scraypa.visit(url: "http://canihazip.com/s")
       end
 
       it "verify public ip address has been retrieved before" do
@@ -177,7 +180,7 @@ RSpec.describe Scraypa do
       it "should be able to change ip address" do
         Scraypa.change_tor_ip_address
         @response_after_ip_change =
-            Scraypa.visit("http://canihazip.com/s")
+            Scraypa.visit(url: "http://canihazip.com/s")
         expect(@response_after_ip_change.native_response)
             .to have_content(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
         expect(@response_after_ip_change.native_response.status_code).to eq(200)
