@@ -1,4 +1,4 @@
-# Scraypa
+# Scraypa (in development - not ready to be used)
 
 Scrape web content with configuration options including: 
  
