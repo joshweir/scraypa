@@ -41,4 +41,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "useragents"
   spec.add_dependency "capybara", "~> 2.4.4"
   spec.add_dependency "chromedriver-helper"
+  spec.add_dependency "slop", '~> 4.2.1'
 end

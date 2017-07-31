@@ -40,11 +40,22 @@ module Scraypa
         @in_use_tor_port = 9250
         @tcp_server_50700 = TCPServer.new('127.0.0.1', 50700)
         @tcp_server_9250 = TCPServer.new('127.0.0.1',9250)
+        cleanup_god_config_files
       end
 
       after :all do
         @tcp_server_50700.close
         @tcp_server_9250.close
+        cleanup_god_processes
+      end
+
+      def cleanup_god_config_files
+        Dir.glob(File.join('/tmp', 'scraypa.tor.*.*.god.rb'))
+            .each { |file| File.delete(file)}
+      end
+
+      def cleanup_god_processes
+        puts 'running cleanup processes!!!!!!!!!!!!'
       end
 
       it "should validate that the tor control port is open" do
@@ -59,6 +70,11 @@ module Scraypa
         expect{TorProcessManager.new(tor_port: @in_use_tor_port,
                                      control_port: 53700).start}
             .to raise_error(/Cannot spawn Tor process as port 9250 is in use/)
+      end
+
+      it "should create a god config in the log dir from template and " +
+             "TorProcessManager settings" do
+
       end
 
       it "should not try to spawn a god process if one already exists associated " +
