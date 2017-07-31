@@ -1,5 +1,3 @@
-require 'socket'
-
 module Scraypa
   class TorProcessManager
     attr_accessor :settings
@@ -26,7 +24,7 @@ module Scraypa
 
     def start
       check_ports_are_open
-      build_god_config_from_template_and_start
+      start_god
     end
 
     private
@@ -39,62 +37,21 @@ module Scraypa
     def check_tor_port_is_open
       raise "Cannot spawn Tor process as port " +
                 "#{@settings[:tor_port]} is in use" unless
-          port_is_open?(@settings[:tor_port])
+          ProcessHelper.port_is_open?(@settings[:tor_port])
     end
 
     def check_control_port_is_open
       raise "Cannot spawn Tor process as control port " +
                 "#{@settings[:control_port]} is in use" unless
-          port_is_open?(@settings[:control_port])
+          ProcessHelper.port_is_open?(@settings[:control_port])
     end
 
-    def port_is_open? port
-      begin
-        server = TCPServer.new('127.0.0.1', port)
-        server.close
-        return true
-      rescue Errno::EADDRINUSE;
-        return false
-      end
-    end
-
-    def build_god_config_from_template_and_start
-      build_god_config_from_template
-      start_god unless god_already_started?
-    end
-
-    def build_god_config_from_template
-      File.open(god_config_filename, "w") do |file|
-        file.puts read_god_config_template_and_substitute_keywords
-      end
+    def start_god
+      god_tor_command
     end
 
     def god_config_filename
       "scraypa.tor.#{@settings[:tor_port]}.#{Process.pid}.god.rb"
-    end
-
-    def read_god_config_template_and_substitute_keywords
-      text = File.read(@settings[:god_tor_config_template])
-      god_config_template_substitution_keywords.each do |keyword|
-        text = text.gsub(/\[\[\[#{keyword}\]\]\]/, @settings[keyword.to_sym])
-      end
-    end
-
-    def god_config_template_substitution_keywords
-      remove_settings_that_are_not_god_config_template_keywords(
-        @settings.keys.map(&:to_s))
-    end
-
-    def remove_settings_that_are_not_god_config_template_keywords keywords
-      keywords - ['god_tor_config_template']
-    end
-
-    def start_god
-
-    end
-
-    def god_already_started?
-
     end
   end
 end
