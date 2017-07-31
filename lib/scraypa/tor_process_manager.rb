@@ -23,27 +23,28 @@ module Scraypa
     end
 
     def start
-      check_ports_are_open
-      start_god
+      start_god if tor_ports_are_open?
     end
 
     private
 
-    def check_ports_are_open
-      check_tor_port_is_open
-      check_control_port_is_open
+    def tor_ports_are_open?
+      tor_port_is_open? &&
+      control_port_is_open?
     end
 
-    def check_tor_port_is_open
+    def tor_port_is_open?
       raise "Cannot spawn Tor process as port " +
                 "#{@settings[:tor_port]} is in use" unless
           ProcessHelper.port_is_open?(@settings[:tor_port])
+      true
     end
 
-    def check_control_port_is_open
+    def control_port_is_open?
       raise "Cannot spawn Tor process as control port " +
                 "#{@settings[:control_port]} is in use" unless
           ProcessHelper.port_is_open?(@settings[:control_port])
+      true
     end
 
     def start_god
