@@ -1,10 +1,19 @@
 module Scraypa
   class ProcessHelper
     def self.query_process query
-      
+      return nil unless query
+      if query.kind_of?(Array)
+        query.each_with_index do |a, i|
+          s = "grep #{a.to_s}" if i == 0
+          s += " | grep #{a.to_s}" if i > 0
+        end
+        fullcmd = "ps -ef | #{s} | grep -v grep | grep -v #{Process.pid.to_s}"
+      else
+
+      end
     end
 
-    def self.kill_processes pids
+    def self.kill_process pids
       
     end 
     
@@ -22,12 +31,14 @@ module Scraypa
     
     def self.port_is_open? port 
     
-    end 
+    end
+
+    private
+
+
   end
 end
 
-=begin
-throw away code: 
 
 def self.kill_rogue_process search_terms_array
     s = ''
@@ -76,4 +87,4 @@ def self.kill_rogue_process search_terms_array
       #ScraperMailer.generic_email(msg).deliver_now
     end
   end
-=end 
+
