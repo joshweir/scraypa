@@ -6,6 +6,7 @@ require "scraypa/visit_capabara"
 require "scraypa/visit_factory"
 require "scraypa/response"
 require "scraypa/tor_process_manager"
+require "scraypa/process_helper"
 require "scraypa/god/sugar"
 
 module Scraypa
