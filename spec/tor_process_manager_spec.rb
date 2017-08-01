@@ -10,12 +10,10 @@ module Scraypa
       expect(tpm.settings[:log_dir]).to eq '/tmp'
       expect(tpm.settings[:tor_data_dir]).to eq '/tmp/tor_data/'
       expect(tpm.settings[:tor_new_circuit_period]).to eq 60
-      expect(tpm.settings[:max_tor_memory_usage]).to eq 200.megabytes
-      expect(tpm.settings[:max_tor_memory_usage_times]).to eq [3,5]
-      expect(tpm.settings[:max_tor_cpu_percentage]).to eq 10.percent
-      expect(tpm.settings[:max_tor_cpu_percentage_times]).to eq [3,5]
-      expect(tpm.settings[:god_tor_config_template])
-          .to eq File.join(File.dirname(__dir__),'lib/scraypa/god/tor.template.god.rb')
+      expect(tpm.settings[:max_tor_memory_usage_mb]).to eq 200
+      expect(tpm.settings[:max_tor_cpu_percentage]).to eq 10
+      expect(tpm.settings[:eye_tor_config_template])
+          .to eq File.join(File.dirname(__dir__),'lib/scraypa/eye/tor.template.eye.rb')
     end
 
     it "should initialize with default parameters that can be overwritten" do
@@ -26,12 +24,10 @@ module Scraypa
       expect(tpm.settings[:log_dir]).to eq '/tmp'
       expect(tpm.settings[:tor_data_dir]).to eq '/my/dir/'
       expect(tpm.settings[:tor_new_circuit_period]).to eq 60
-      expect(tpm.settings[:max_tor_memory_usage]).to eq 200.megabytes
-      expect(tpm.settings[:max_tor_memory_usage_times]).to eq [3,5]
-      expect(tpm.settings[:max_tor_cpu_percentage]).to eq 10.percent
-      expect(tpm.settings[:max_tor_cpu_percentage_times]).to eq [3,5]
-      expect(tpm.settings[:god_tor_config_template])
-          .to eq File.join(File.dirname(__dir__),'lib/scraypa/god/tor.template.god.rb')
+      expect(tpm.settings[:max_tor_memory_usage_mb]).to eq 200
+      expect(tpm.settings[:max_tor_cpu_percentage]).to eq 10
+      expect(tpm.settings[:eye_tor_config_template])
+          .to eq File.join(File.dirname(__dir__),'lib/scraypa/eye/tor.template.eye.rb')
     end
 
     describe "#start" do
@@ -45,10 +41,10 @@ module Scraypa
       after :all do
         @tcp_server_50700.close
         @tcp_server_9250.close
-        cleanup_god_processes
+        cleanup_eye_processes
       end
 
-      def cleanup_god_processes
+      def cleanup_eye_processes
         puts 'running cleanup processes!!!!!!!!!!!!'
       end
 
@@ -66,23 +62,36 @@ module Scraypa
             .to raise_error(/Cannot spawn Tor process as port 9250 is in use/)
       end
 
-      it "should spawn a Tor god process for the current " +
+      it "should create a tor eye config file for the current Tor instance settings" do
+        contents = ''
+        Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
+          File.delete(file)}
+        TorProcessManager.new(tor_port: 9350,
+                              control_port: 53700).start
+        Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
+          contents = File.read(file); break;}
+        expect(contents).to match(/tor --SocksPort 9350/)
+      end
+
+      it "should spawn a Tor process for the current " +
              "Tor instance settings" do
-        
+        TorProcessManager.new(tor_port: 9350,
+                              control_port: 53700).start
       end
     end
 
+    #TODO: stop should issue the eye stop orders
     describe "#stop" do
-      it "should check if any Tor god process is running spawned by the current " +
-             "process, then issue god stop orders and kill it" do
+      it "should check if any Tor eye process is running spawned by the current " +
+             "process, then issue eye stop orders and kill it" do
 
       end
     end
 
     describe "#stop_obsolete_processes" do
-      it "should check if any Tor god processes " +
+      it "should check if any Tor eye processes " +
              "are running associated to Scraypa instances that no longer exist " +
-             "then issue god stop orders and kill the god process as it is stale" do
+             "then issue eye stop orders and kill the eye process as it is stale" do
 
       end
     end

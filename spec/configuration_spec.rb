@@ -79,17 +79,17 @@ module Scraypa
       end
     end
 
-    describe "#god_tor_config_template" do
+    describe "#eye_tor_config_template" do
       it "should have a default value of nil" do
-        expect(Configuration.new.god_tor_config_template).to be_nil
+        expect(Configuration.new.eye_tor_config_template).to be_nil
       end
     end
 
-    describe "#god_tor_config_template=" do
+    describe "#eye_tor_config_template=" do
       it "can set value" do
         config = Configuration.new
-        config.god_tor_config_template = '/my/path/to.god.config.rb'
-        expect(config.god_tor_config_template).to eq '/my/path/to.god.config.rb'
+        config.eye_tor_config_template = '/my/path/to.eye.config.rb'
+        expect(config.eye_tor_config_template).to eq '/my/path/to.eye.config.rb'
       end
     end
   end

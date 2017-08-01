@@ -1,3 +1,12 @@
+require 'eye'
+require 'fileutils'
+
+=begin
+TODO:
+> control multiple tor processes concurrently with eye
+> build multiple config files concurrently for eye to control tor
+=end
+
 module Scraypa
   class TorProcessManager
     attr_accessor :settings
@@ -10,20 +19,16 @@ module Scraypa
       @settings[:log_dir] = params.fetch(:log_dir, '/tmp'.freeze)
       @settings[:tor_data_dir] = params.fetch(:tor_data_dir, "/tmp/tor_data/")
       @settings[:tor_new_circuit_period] = params.fetch(:tor_new_circuit_period, 60)
-      @settings[:max_tor_memory_usage] = params.fetch(:max_tor_memory_usage, 200.megabytes)
-      @settings[:max_tor_memory_usage_times] = params.fetch(
-          :max_tor_memory_usage_times, [3, 5])
-      @settings[:max_tor_cpu_percentage] = params.fetch(:max_tor_cpu_percentage, 10.percent)
-      @settings[:max_tor_cpu_percentage_times] = params.fetch(
-          :max_tor_cpu_percentage_times, [3, 5])
-      @settings[:god_tor_config_template] =
-          params.fetch(:god_tor_config_template,
-            File.join(File.dirname(__dir__),'scraypa/god/tor.template.god.rb'))
+      @settings[:max_tor_memory_usage_mb] = params.fetch(:max_tor_memory_usage, 200)
+      @settings[:max_tor_cpu_percentage] = params.fetch(:max_tor_cpu_percentage, 10)
+      @settings[:eye_tor_config_template] =
+          params.fetch(:eye_tor_config_template,
+            File.join(File.dirname(__dir__),'scraypa/eye/tor.template.eye.rb'))
       @settings[:parent_pid] = Process.pid
     end
 
     def start
-      start_god if tor_ports_are_open?
+      prepare_tor_start_and_monitor if tor_ports_are_open?
     end
 
     private
@@ -47,12 +52,54 @@ module Scraypa
       true
     end
 
-    def start_god
-      god_tor_command
+    def prepare_tor_start_and_monitor
+      build_eye_config_from_template
+      make_dirs
+      start_tor_and_monitor
     end
 
-    def god_config_filename
-      "scraypa.tor.#{@settings[:tor_port]}.#{Process.pid}.god.rb"
+    def build_eye_config_from_template
+      File.open(eye_config_filename, "w") do |file|
+        file.puts read_eye_tor_config_template_and_substitute_keywords
+      end
+    end
+
+    def eye_config_filename
+      File.join(@settings[:log_dir],
+                "scraypa.tor.#{@settings[:tor_port]}.#{Process.pid}.eye.rb")
+    end
+
+    def eye_app_name
+      "scraypa-tor-#{@settings[:tor_port]}-#{Process.pid}"
+    end
+
+    def read_eye_tor_config_template_and_substitute_keywords
+      text = File.read(@settings[:eye_tor_config_template])
+      eye_tor_config_template_substitution_keywords.each do |keyword|
+        text = text.gsub(/\[\[\[#{keyword}\]\]\]/, @settings[keyword.to_sym].to_s)
+      end
+      text
+    end
+
+    def eye_tor_config_template_substitution_keywords
+      remove_settings_that_are_not_eye_tor_config_template_keywords(
+          @settings.keys.map(&:to_s))
+    end
+
+    def remove_settings_that_are_not_eye_tor_config_template_keywords keywords
+      keywords - ['eye_tor_config_template']
+    end
+
+    def make_dirs
+      [@settings[:log_dir], @settings[:pid_dir],
+       @settings[:tor_data_dir]].each do |path|
+        FileUtils.mkpath(path) unless File.exists?(path)
+      end
+    end
+
+    def start_tor_and_monitor
+      EyeManager.start config: eye_config_filename,
+                       application: eye_app_name
     end
   end
 end
