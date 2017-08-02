@@ -1,11 +1,6 @@
 require 'eye'
+require 'eyemanager'
 require 'fileutils'
-
-=begin
-TODO:
-> control multiple tor processes concurrently with eye
-> build multiple config files concurrently for eye to control tor
-=end
 
 module Scraypa
   class TorProcessManager
@@ -29,6 +24,26 @@ module Scraypa
 
     def start
       prepare_tor_start_and_monitor if tor_ports_are_open?
+    end
+
+    def stop
+      EyeManager.stop application: eye_app_name, process: 'tor'
+      ensure_tor_is_down
+    end
+
+    class << self
+      def stop_obsolete_processes
+        (EyeManager.list_apps || []).each do |app|
+          EyeManager.stop(application: app, process: 'tor') unless
+              ProcessHelper.process_pid_running? pid_of_tor_eye_process(app)
+        end
+      end
+
+      private
+
+      def pid_of_tor_eye_process app
+        app.to_s.split('-').last
+      end
     end
 
     private
@@ -65,12 +80,12 @@ module Scraypa
     end
 
     def eye_config_filename
-      File.join(@settings[:log_dir],
+      @eye_config_filename || File.join(@settings[:log_dir],
                 "scraypa.tor.#{@settings[:tor_port]}.#{Process.pid}.eye.rb")
     end
 
     def eye_app_name
-      "scraypa-tor-#{@settings[:tor_port]}-#{Process.pid}"
+      @eye_app_name || "scraypa-tor-#{@settings[:tor_port]}-#{Process.pid}"
     end
 
     def read_eye_tor_config_template_and_substitute_keywords
@@ -100,6 +115,33 @@ module Scraypa
     def start_tor_and_monitor
       EyeManager.start config: eye_config_filename,
                        application: eye_app_name
+      ensure_tor_is_up
+    end
+
+    def ensure_tor_is_up
+      10.times do |i|
+        break if
+            EyeManager.status(
+                application: eye_app_name,
+                process: 'tor') == 'up'
+        sleep 2
+        raise "Tor didnt start up after 20 seconds! See log: " +
+                  "#{File.join(@settings[:log_dir],
+                               eye_app_name + ".log")}" if i >= 9
+      end
+    end
+
+    def ensure_tor_is_down
+      10.times do |i|
+        break if
+            EyeManager.status(
+                application: eye_app_name,
+                process: 'tor') != 'up'
+        sleep 2
+        raise "Tor didnt start stop after 20 seconds! See log: " +
+                  "#{File.join(@settings[:log_dir],
+                               eye_app_name + ".log")}" if i >= 9
+      end
     end
   end
 end

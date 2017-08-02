@@ -1,7 +1,7 @@
 require 'eye'
 
 # Adding application
-Eye.application 'test' do
+Eye.application 'scraypa-tor-9450-12345' do
   # All options inherits down to the config leafs.
   # except `env`, which merging down
 
@@ -14,7 +14,7 @@ Eye.application 'test' do
   trigger :flapping, times: 10, within: 1.minute, retry_in: 10.minutes
   check :cpu, every: 30.seconds, below: 10, times: 3 # global check for all processes
   check :memory, every: 60.seconds, below: 200.megabytes, times: 3
-  process :sample do
+  process :tor do
     pid_file '/tmp/1.pid' # pid_path will be expanded with the working_dir
     start_command "ruby -e \"loop{sleep 5}\""
 
