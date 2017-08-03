@@ -9,7 +9,7 @@ module Scraypa
     end
 
     after :all do
-      #EyeManager.destroy
+      EyeManager.destroy
     end
 
     it "should initialize with default parameters" do

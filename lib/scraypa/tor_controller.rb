@@ -14,7 +14,6 @@ module Scraypa
       @settings[:control_port] = params.fetch(:control_port, 50500)
       @ip = nil
       @endpoint_change_attempts = 5
-      enable_socks_server
     end
 
     def get_ip
@@ -27,6 +26,11 @@ module Scraypa
       get_new_tor_endpoint_ip
     end
 
+    def proxy
+      enable_socks_server
+      yield.tap { disable_socks_server }
+    end
+
     private
 
     def ensure_tor_is_available
@@ -36,10 +40,14 @@ module Scraypa
     end
 
     def tor_endpoint_ip
-      RestClient::Request
-          .execute(method: :get,
-                   url: 'http://bot.whatismyipaddress.com')
-          .to_str
+      ip = nil
+      proxy do
+        ip = RestClient::Request
+            .execute(method: :get,
+                     url: 'http://bot.whatismyipaddress.com')
+            .to_str
+      end
+      ip
     rescue Exception => ex
       puts "Error getting ip: #{ex.to_s}"
       return nil
@@ -48,7 +56,6 @@ module Scraypa
     def get_new_tor_endpoint_ip
       @endpoint_change_attempts.times do |i|
         tor_switch_endpoint
-        sleep 10
         new_ip = tor_endpoint_ip
         if (new_ip.to_s.length > 0 && new_ip != @ip)
           @ip = new_ip
@@ -65,7 +72,6 @@ module Scraypa
         tor.signal("newnym")
         sleep 10
       end
-      enable_socks_server
     end
 
     def enable_socks_server
