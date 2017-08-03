@@ -41,74 +41,141 @@ RSpec.describe Scraypa do
       end
     end
 
-    describe "using Capybara with poltergeist driver (using javascript)" do
-      before do
-        Scraypa.configure do |config|
-          config.use_capybara = true
-          config.driver = :poltergeist
-          config.driver_options = {
-              :phantomjs => Phantomjs.path,
-              :js_errors => false,
-              :phantomjs_options => ["--web-security=true"]
-          }
+    describe "using Capybara (using javascript)" do
+      describe "with headless_chromium driver" do
+        before do
+          Scraypa.configure do |config|
+            config.use_capybara = true
+            config.driver = :headless_chromium
+            config.driver_options = {
+                browser: :chrome,
+                desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+                    "chromeOptions" => {
+                        'binary' => "/home/resrev/chromium/src/out/Default/chrome",
+                        'args' => %w{headless no-sandbox disable-gpu}
+                    }
+                )
+            }
+          end
+          @response = Scraypa.visit(:url => "http://canihazip.com/s")
         end
-        @response = Scraypa.visit(:url => "http://canihazip.com/s")
-      end
 
-      it "should utilise capybara to download web content" do
-        expect(@response.class).to eq(Scraypa::Response)
-        expect(@response.native_response.class).to eq(Capybara::Session)
-        expect(@response.native_response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
-        expect(@response.native_response.status_code).to eq(200)
-      end
+        it "should utilise capybara to download web content" do
+          #Capybara.current_driver = :poltergeist_billy
+          #Capybara.javascript_driver = :poltergeist_billy
+          #proxy.stub('http://www.google.com/')
+          #    .and_return(:text => "test response")
+          #visit "http://www.google.com/"
+          #expect(page.text).to eq('test response')
 
-      it "should be able to execute javascript" do
-        @response.native_response.execute_script(
-            "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
-        expect(@response.native_response).to have_content('changed')
-      end
-    end
-
-    describe "using Capybara with headless_chromium driver (using javascript)" do
-      before do
-        Scraypa.configure do |config|
-          config.use_capybara = true
-          config.driver = :headless_chromium
-          config.driver_options = {
-              browser: :chrome,
-              desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-                  "chromeOptions" => {
-                      'binary' => "/home/resrev/chromium/src/out/Default/chrome",
-                      'args' => %w{headless no-sandbox disable-gpu}
-                  }
-              )
-          }
+          expect(@response.class).to eq(Scraypa::Response)
+          expect(@response.native_response.class).to eq(Capybara::Session)
+          expect(@response.native_response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
         end
-        @response = Scraypa.visit(:url => "http://canihazip.com/s")
+
+        it "should be able to execute javascript" do
+          @response.native_response.execute_script(
+              "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
+          expect(@response.native_response).to have_content('changed')
+        end
       end
 
-      it "should utilise capybara to download web content" do
-        #Capybara.current_driver = :poltergeist_billy
-        #Capybara.javascript_driver = :poltergeist_billy
-        #proxy.stub('http://www.google.com/')
-        #    .and_return(:text => "test response")
-        #visit "http://www.google.com/"
-        #expect(page.text).to eq('test response')
+      describe "with poltergeist driver" do
+        before do
+          Scraypa.configure do |config|
+            config.use_capybara = true
+            config.driver = :poltergeist
+            config.driver_options = {
+                :phantomjs => Phantomjs.path,
+                :js_errors => false,
+                :phantomjs_options => ["--web-security=true"]
+            }
+          end
+          @response = Scraypa.visit(:url => "http://canihazip.com/s")
+        end
 
-        expect(@response.class).to eq(Scraypa::Response)
-        expect(@response.native_response.class).to eq(Capybara::Session)
-        expect(@response.native_response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
-      end
+        it "should utilise capybara to download web content" do
+          expect(@response.class).to eq(Scraypa::Response)
+          expect(@response.native_response.class).to eq(Capybara::Session)
+          expect(@response.native_response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+          expect(@response.native_response.status_code).to eq(200)
+        end
 
-      it "should be able to execute javascript" do
-        @response.native_response.execute_script(
-            "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
-        expect(@response.native_response).to have_content('changed')
+        it "should be able to execute javascript" do
+          @response.native_response.execute_script(
+              "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
+          expect(@response.native_response).to have_content('changed')
+        end
+
+        describe "through Tor" do
+          before do
+            Scraypa.reset
+            @my_ip = Scraypa
+                         .visit(:method => :get,
+                                url: "http://bot.whatismyipaddress.com")
+                         .native_response.to_str
+            @another_ip_check =
+                Scraypa
+                    .visit(:method => :get,
+                           url: "http://canihazip.com/s")
+                    .native_response.to_str
+
+            Scraypa.configure do |config|
+              config.use_capybara = true
+              config.tor = true
+              config.tor_options = {
+                  tor_port: 9055,
+                  control_port: 50500
+              }
+              config.driver = :poltergeist
+              config.driver_options = {
+                  :phantomjs => Phantomjs.path,
+                  :js_errors => false,
+                  :phantomjs_options => ["--web-security=true"]
+              }
+            end
+            @response = Scraypa.visit(url: "http://canihazip.com/s")
+          end
+
+          it "verify public ip address has been retrieved before" do
+            expect(@my_ip).to match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+          end
+
+          it "verify successful match with current ip address using canihazip.com" do
+            expect(@another_ip_check).to eq(@my_ip)
+          end
+
+          it "should have a different ip address to current public ip address" do
+            expect(@response.native_response.class).to eq(Capybara::Session)
+            expect(@response.native_response).to have_content(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
+            expect(@response.native_response.status_code).to eq(200)
+            expect(@response.native_response).not_to have_text(@my_ip)
+          end
+
+          it "should be able to change ip address" do
+            Scraypa.change_tor_ip_address
+            @response_after_ip_change =
+                Scraypa.visit(url: "http://canihazip.com/s")
+            expect(@response_after_ip_change.native_response)
+                .to have_content(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
+            expect(@response_after_ip_change.native_response.status_code).to eq(200)
+            expect(@response_after_ip_change.native_response)
+                .not_to have_text(@my_ip)
+            expect(@response_after_ip_change.native_response)
+                .not_to have_text(@response.native_response.text)
+          end
+
+          it "should be able to execute javascript" do
+            @response.native_response.execute_script(
+                "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
+            expect(@response.native_response).to have_text('changed')
+          end
+        end
       end
     end
 
     describe "Tor Process Management" do
-      it "should, on configuration change, check if any Tor god processes " +
+      it "should, on configuration change, check if any Tor eye processes " +
              "are running associated to Scraypa instances that no longer exist " +
              "then issue god stop orders and kill the god process as it is stale" do
 
@@ -129,71 +196,6 @@ RSpec.describe Scraypa do
       it "should be able to stop the tor process and god process " +
              "that spawned tor (otherwise it will keep running)" do
 
-      end
-    end
-
-    describe "using Capybara with poltergeist driver through Tor" do
-      before do
-        Scraypa.reset
-        @my_ip = Scraypa
-                     .visit(:method => :get,
-                            url: "http://bot.whatismyipaddress.com")
-                     .native_response.to_str
-        @another_ip_check =
-            Scraypa
-             .visit(:method => :get,
-                    url: "http://canihazip.com/s")
-             .native_response.to_str
-
-        Scraypa.configure do |config|
-          config.use_capybara = true
-          config.tor = true
-          config.tor_options = {
-              tor_port: 9055,
-              control_port: 50500
-          }
-          config.driver = :poltergeist
-          config.driver_options = {
-              :phantomjs => Phantomjs.path,
-              :js_errors => false,
-              :phantomjs_options => ["--web-security=true"]
-          }
-        end
-        @response = Scraypa.visit(url: "http://canihazip.com/s")
-      end
-
-      it "verify public ip address has been retrieved before" do
-        expect(@my_ip).to match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
-      end
-
-      it "verify successful match with current ip address using canihazip.com" do
-        expect(@another_ip_check).to eq(@my_ip)
-      end
-
-      it "should have a different ip address to current public ip address" do
-        expect(@response.native_response.class).to eq(Capybara::Session)
-        expect(@response.native_response).to have_content(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
-        expect(@response.native_response.status_code).to eq(200)
-        expect(@response.native_response).not_to have_text(@my_ip)
-      end
-
-      it "should be able to change ip address" do
-        Scraypa.change_tor_ip_address
-        @response_after_ip_change =
-            Scraypa.visit(url: "http://canihazip.com/s")
-        expect(@response_after_ip_change.native_response)
-            .to have_content(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
-        expect(@response_after_ip_change.native_response.status_code).to eq(200)
-        expect(@response_after_ip_change.native_response)
-            .not_to have_text(@my_ip)
-        expect(@response_after_ip_change.native_response)
-            .not_to have_text(@response.native_response.text)
-      end
-
-      it "should be able to execute javascript" do
-        @response.native_response.execute_script(
-            "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
-        expect(@response.native_response).to have_text('changed')
       end
     end
   end

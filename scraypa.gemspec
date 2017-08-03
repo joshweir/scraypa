@@ -35,4 +35,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "eye"
   spec.add_dependency "eyemanager"
   spec.add_dependency "gem-release"
+  spec.add_dependency "socksify"
+  spec.add_dependency "terminator"
 end

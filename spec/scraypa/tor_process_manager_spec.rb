@@ -2,6 +2,10 @@ require "spec_helper"
 
 module Scraypa
   describe TorProcessManager do
+    after :all do
+      EyeManager.destroy
+    end
+
     it "should initialize with default parameters" do
       tpm = TorProcessManager.new
       expect(tpm.settings[:tor_port]).to eq 9050
@@ -34,7 +38,7 @@ module Scraypa
 
     describe "#start" do
       before :all do
-        cleanup_eye_processes
+        EyeManager.destroy
         @in_use_control_port = 50700
         @in_use_tor_port = 9250
         @tcp_server_50700 = TCPServer.new('127.0.0.1', 50700)
@@ -44,10 +48,6 @@ module Scraypa
       after :all do
         @tcp_server_50700.close
         @tcp_server_9250.close
-        cleanup_eye_processes
-      end
-
-      def cleanup_eye_processes
         EyeManager.destroy
       end
 
@@ -130,6 +130,25 @@ module Scraypa
                                  process: "tor")).to eq "up"
         expect(EyeManager.status(application: "scraypa-tor-9450-12345",
                                  process: "tor")).to_not match /up|starting/
+        EyeManager.destroy
+      end
+    end
+
+    describe ".tor_running_on_port?" do
+      it "should be true if Tor is running on port" do
+        Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
+          File.delete(file)}
+        tpm = TorProcessManager.new(tor_port: 9350,
+                                     control_port: 53700)
+        tpm.start
+        expect(EyeManager.status(application: "scraypa-tor-9350-#{tpm.settings[:parent_pid]}",
+                                 process: "tor")).to eq "up"
+        expect(TorProcessManager.tor_running_on_port?(9350)).to be_truthy
+        tpm.stop
+      end
+
+      it "should not be true if Tor is not running on port" do
+        expect(TorProcessManager.tor_running_on_port?(9350)).to be_falsey
       end
     end
   end

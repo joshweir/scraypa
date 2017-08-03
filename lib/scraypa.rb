@@ -7,6 +7,7 @@ require "scraypa/visit_factory"
 require "scraypa/response"
 require "scraypa/tor_process_manager"
 require "scraypa/process_helper"
+require "scraypa/tor_controller"
 
 module Scraypa
   class << self

@@ -39,10 +39,29 @@ module Scraypa
         end
       end
 
+      def tor_running_on_port? port
+        is_running = false
+        (EyeManager.list_apps || []).each do |app|
+          if port_of_tor_eye_process(app) == port &&
+             EyeManager.status(application: app,
+                               process: 'tor') == 'up'
+            is_running = true
+            break
+          end
+        end
+        is_running
+      end
+
       private
 
       def pid_of_tor_eye_process app
         app.to_s.split('-').last
+      end
+
+      def port_of_tor_eye_process app
+        app_name_split = app.to_s.split('-')
+        app_name_split.length >= 3 ?
+            app_name_split[2].to_i : nil
       end
     end
 

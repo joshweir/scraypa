@@ -12,8 +12,8 @@ Eye.application 'scraypa-tor-[[[tor_port]]]-[[[parent_pid]]]' do
   process :tor do
     pid_file File.join('[[[log_dir]]]', 'scraypa-tor-[[[tor_port]]]-[[[parent_pid]]].pid')
     start_command "tor --SocksPort [[[tor_port]]] --ControlPort [[[control_port]]] " +
-                      "--CookieAuthentication 0 --HashedControlPassword \"16:3E49D6163CCA95F2605B339" +
-                      "E07F753C8F567DE4200E33FDF4CC6B84E44\" --NewCircuitPeriod " +
+                      "--CookieAuthentication 0 --HashedControlPassword \"16:79F62C911BB3338760" +
+                      "A12C9B18698B9200E05B8552466887A5FD773E72\" --NewCircuitPeriod " +
                       "[[[tor_new_circuit_period]]] --DataDirectory #{File.join('[[[tor_data_dir]]]','[[[tor_port]]]')} --Log \"notice syslog\""
     daemonize true
   end
