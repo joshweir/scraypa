@@ -12,7 +12,7 @@ module Scraypa
       expect(tpm.settings[:control_port]).to eq 50500
       expect(tpm.settings[:pid_dir]).to eq '/tmp'
       expect(tpm.settings[:log_dir]).to eq '/tmp'
-      expect(tpm.settings[:tor_data_dir]).to eq '/tmp/tor_data/'
+      expect(tpm.settings[:tor_data_dir]).to eq nil
       expect(tpm.settings[:tor_new_circuit_period]).to eq 60
       expect(tpm.settings[:max_tor_memory_usage_mb]).to eq 200
       expect(tpm.settings[:max_tor_cpu_percentage]).to eq 10
@@ -99,6 +99,20 @@ module Scraypa
           Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
             contents = File.read(file); break;}
           expect(contents).to match(/tor --SocksPort 9350/)
+          tpm.stop
+        end
+
+        it "should use the :tor_data_dir if passed as input" do
+          Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
+            File.delete(file)}
+          tpm = TorProcessManager.new(tor_port: 9350,
+                                      control_port: 53700,
+                                      tor_data_dir: '/tmp/tor_data')
+          tpm.start
+          expect(EyeManager.status(application: "scraypa-tor-9350-#{tpm.settings[:parent_pid]}",
+                                   process: "tor")).to eq "up"
+          expect(`ps -ef | grep tor | grep 9350 | grep 53700`)
+              .to match /DataDirectory \/tmp\/tor_data\/9350/
           tpm.stop
         end
 

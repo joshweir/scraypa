@@ -13,7 +13,12 @@ Eye.application 'scraypa-tor-[[[tor_port]]]-[[[parent_pid]]]' do
     pid_file File.join('[[[log_dir]]]', 'scraypa-tor-[[[tor_port]]]-[[[parent_pid]]].pid')
     start_command "tor --SocksPort [[[tor_port]]] --ControlPort [[[control_port]]] " +
                       "--CookieAuthentication 0 --HashedControlPassword \"[[[hashed_control_password]]]\" --NewCircuitPeriod " +
-                      "[[[tor_new_circuit_period]]] --DataDirectory #{File.join('[[[tor_data_dir]]]','[[[tor_port]]]')} --Log \"notice syslog\""
+                      "[[[tor_new_circuit_period]]] " +
+                      ('[[[tor_data_dir]]]'.length > 0 ?
+                          "--DataDirectory #{File.join('[[[tor_data_dir]]]',
+                                                       '[[[tor_port]]]')} " :
+                          "") +
+                      "--Log \"notice syslog\""
     daemonize true
   end
 end

@@ -13,7 +13,7 @@ module Scraypa
       @settings[:control_port] = params.fetch(:control_port, 50500)
       @settings[:pid_dir] = params.fetch(:pid_dir, '/tmp'.freeze)
       @settings[:log_dir] = params.fetch(:log_dir, '/tmp'.freeze)
-      @settings[:tor_data_dir] = params.fetch(:tor_data_dir, "/tmp/tor_data/")
+      @settings[:tor_data_dir] = params.fetch(:tor_data_dir, nil)
       @settings[:tor_new_circuit_period] = params.fetch(:tor_new_circuit_period, 60)
       @settings[:max_tor_memory_usage_mb] = params.fetch(:max_tor_memory_usage, 200)
       @settings[:max_tor_cpu_percentage] = params.fetch(:max_tor_cpu_percentage, 10)
@@ -131,7 +131,7 @@ module Scraypa
     def make_dirs
       [@settings[:log_dir], @settings[:pid_dir],
        @settings[:tor_data_dir]].each do |path|
-        FileUtils.mkpath(path) unless File.exists?(path)
+        FileUtils.mkpath(path) if path && !File.exists?(path)
       end
     end
 
