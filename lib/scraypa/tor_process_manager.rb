@@ -1,6 +1,7 @@
 require 'eye'
 require 'eyemanager'
 require 'fileutils'
+require 'securerandom'
 
 module Scraypa
   class TorProcessManager
@@ -20,6 +21,9 @@ module Scraypa
           params.fetch(:eye_tor_config_template,
             File.join(File.dirname(__dir__),'scraypa/eye/tor.template.eye.rb'))
       @settings[:parent_pid] = Process.pid
+      @settings[:control_password] = params.fetch(:control_password, random_password)
+      @settings[:hashed_control_password] =
+          tor_hash_password_from(@settings[:control_password])
     end
 
     def start
@@ -121,7 +125,7 @@ module Scraypa
     end
 
     def remove_settings_that_are_not_eye_tor_config_template_keywords keywords
-      keywords - ['eye_tor_config_template']
+      keywords - ['eye_tor_config_template', 'control_password']
     end
 
     def make_dirs
@@ -161,6 +165,14 @@ module Scraypa
                   "#{File.join(@settings[:log_dir],
                                eye_app_name + ".log")}" if i >= 9
       end
+    end
+
+    def random_password
+      SecureRandom.random_number(36**12).to_s(36).rjust(12, "0")
+    end
+
+    def tor_hash_password_from password
+      `tor --quiet --hash-password '#{password}'`.strip
     end
   end
 end

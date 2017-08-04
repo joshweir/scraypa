@@ -19,6 +19,9 @@ module Scraypa
       expect(tpm.settings[:eye_tor_config_template])
           .to eq File.join(File.expand_path('../../..', __FILE__),
                            'lib/scraypa/eye/tor.template.eye.rb')
+      expect(tpm.settings[:control_password].length).to eq 12
+      expect(tpm.settings[:hashed_control_password][0..2])
+          .to eq '16:'
     end
 
     it "should initialize with default parameters that can be overwritten" do
@@ -34,6 +37,22 @@ module Scraypa
       expect(tpm.settings[:eye_tor_config_template])
           .to eq File.join(File.expand_path('../../..', __FILE__),
                            'lib/scraypa/eye/tor.template.eye.rb')
+    end
+
+    it "should generate a random control_password (between 8 and 16 chars) " +
+        "and a hash_control_password when none specified" do
+      tpm = TorProcessManager.new
+      expect(tpm.settings[:control_password].length).to eq 12
+      expect(tpm.settings[:hashed_control_password][0..2])
+          .to eq '16:'
+    end
+
+    it "should generate a hashed_control_password based on user specified control_password" do
+      test_password = 'testpassword'
+      tpm = TorProcessManager.new control_password: test_password
+      expect(tpm.settings[:control_password]).to eq test_password
+      expect(tpm.settings[:hashed_control_password][0..2])
+          .to eq '16:'
     end
 
     describe "#start" do
@@ -66,29 +85,34 @@ module Scraypa
       end
 
       describe "spawn the tor process" do
-        before :all do
-          Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
-            File.delete(file)}
-          @tpm = TorProcessManager.new(tor_port: 9350,
-                                control_port: 53700)
-          @tpm.start
-        end
-
         after :all do
           EyeManager.destroy
         end
 
         it "should create a tor eye config file for the current Tor instance settings" do
+          Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
+            File.delete(file)}
+          tpm = TorProcessManager.new(tor_port: 9350,
+                                      control_port: 53700)
+          tpm.start
           contents = ''
           Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
             contents = File.read(file); break;}
           expect(contents).to match(/tor --SocksPort 9350/)
+          tpm.stop
         end
 
-        it "should spawn a Tor process for the current " +
-               "Tor instance settings" do
-          expect(EyeManager.status(application: "scraypa-tor-9350-#{@tpm.settings[:parent_pid]}",
-                            process: "tor")).to eq "up"
+        it "should start tor using the hashed_control_password" do
+          Dir.glob("/tmp/scraypa.tor.9350.*.eye.rb").each{|file|
+            File.delete(file)}
+          tpm = TorProcessManager.new(tor_port: 9350,
+                                      control_port: 53700)
+          tpm.start
+          expect(EyeManager.status(application: "scraypa-tor-9350-#{tpm.settings[:parent_pid]}",
+                                   process: "tor")).to eq "up"
+          expect(`ps -ef | grep tor | grep 9350 | grep 53700`)
+              .to match /HashedControlPassword 16:/
+          tpm.stop
         end
       end
     end
