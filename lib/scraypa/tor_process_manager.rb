@@ -24,6 +24,9 @@ module Scraypa
       @settings[:control_password] = params.fetch(:control_password, random_password)
       @settings[:hashed_control_password] =
           tor_hash_password_from(@settings[:control_password])
+      @settings[:tor_log_switch] = params.fetch(:tor_log_switch, nil)
+      @settings[:eye_logging] = params.fetch(:eye_logging, nil)
+      @settings[:tor_logging] = params.fetch(:tor_logging, nil)
     end
 
     def start
