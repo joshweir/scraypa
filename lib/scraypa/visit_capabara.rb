@@ -13,11 +13,23 @@ module Scraypa
     end
 
     def execute params={}
-      Capybara.visit params[:url]
-      wrap_response Capybara.page
+      @config.tor_controller ?
+        visit_get_response_through_tor(params) :
+        visit_get_response(params)
     end
 
     private
+
+    def visit_get_response_through_tor params={}
+      @config.tor_controller.proxy do
+        return visit_get_response params
+      end
+    end
+
+    def visit_get_response params={}
+      Capybara.visit params[:url]
+      wrap_response Capybara.page
+    end
 
     def setup_driver
       case @config.driver

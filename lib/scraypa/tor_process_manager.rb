@@ -48,10 +48,10 @@ module Scraypa
         end
       end
 
-      def tor_running_on_port? port
+      def tor_running_on? params={}
         is_running = false
         (EyeManager.list_apps || []).each do |app|
-          if port_of_tor_eye_process(app) == port &&
+          if port_and_or_pid_matches_eye_tor_name?(app, params) &&
              EyeManager.status(application: app,
                                process: 'tor') == 'up'
             is_running = true
@@ -62,6 +62,12 @@ module Scraypa
       end
 
       private
+
+      def port_and_or_pid_matches_eye_tor_name? app, params={}
+        (params[:port] || params[:parent_pid]) &&
+        (!params[:port] || port_of_tor_eye_process(app).to_i == params[:port].to_i) &&
+        (!params[:parent_pid] || pid_of_tor_eye_process(app).to_i == params[:parent_pid].to_i)
+      end
 
       def pid_of_tor_eye_process app
         app.to_s.split('-').last
@@ -161,12 +167,12 @@ module Scraypa
 
     def ensure_tor_is_down
       10.times do |i|
-        break if
-            EyeManager.status(
-                application: eye_app_name,
-                process: 'tor') != 'up'
+        tor_status = EyeManager.status(
+            application: eye_app_name,
+            process: 'tor')
+        break if ['unknown','unmonitored'].include?(tor_status)
         sleep 2
-        raise "Tor didnt start stop after 20 seconds! See log: " +
+        raise "Tor didnt stop after 20 seconds! Last status: #{tor_status} See log: " +
                   "#{File.join(@settings[:log_dir],
                                eye_app_name + ".log")}" if i >= 9
       end

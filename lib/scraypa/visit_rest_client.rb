@@ -8,10 +8,22 @@ module Scraypa
     end
 
     def execute params={}
-      wrap_response RestClient::Request.execute params
+      @config.tor_controller ?
+        visit_get_response_through_tor(params) :
+        visit_get_response(params)
     end
 
     private
+
+    def visit_get_response_through_tor params={}
+      @config.tor_controller.proxy do
+        return visit_get_response params
+      end
+    end
+
+    def visit_get_response params={}
+      wrap_response RestClient::Request.execute params
+    end
 
     def wrap_response native_response
       Scraypa::Response.new native_response: native_response

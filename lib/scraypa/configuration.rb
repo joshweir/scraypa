@@ -1,7 +1,7 @@
 module Scraypa
   class Configuration
-    attr_accessor :use_capybara, :tor, :driver, :driver_options, :tor_options,
-                  :eye_tor_config_template
+    attr_accessor :use_capybara, :driver, :driver_options, :tor, :tor_options,
+                  :eye_tor_config_template, :tor_process_manager, :tor_controller
 
     def initialize
       @use_capybara = nil
@@ -10,13 +10,8 @@ module Scraypa
       @driver = nil
       @driver_options = nil
       @eye_tor_config_template = nil
-      initialize_tor @tor_options if @tor
-    end
-
-    private
-
-    def initialize_tor params={}
-
+      @tor_process_manager = nil
+      @tor_controller = nil
     end
   end
 end

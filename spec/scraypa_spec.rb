@@ -3,6 +3,10 @@ require "spec_helper"
 WebMock.allow_net_connect!(allow_localhost: true)
 
 RSpec.describe Scraypa do
+  before :all do
+    EyeManager.destroy
+  end
+
   it "has a version number" do
     expect(Scraypa::VERSION).not_to be nil
   end

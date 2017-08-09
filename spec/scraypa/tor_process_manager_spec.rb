@@ -226,7 +226,7 @@ module Scraypa
       end
     end
 
-    describe ".tor_running_on_port?" do
+    describe ".tor_running_on?" do
       before :all do
         @tpm = TorProcessManager.new
         cleanup_related_files @tpm.settings
@@ -239,14 +239,26 @@ module Scraypa
       it "is true if Tor is running on port" do
         @tpm.start
         expect(tor_process_status(@tpm.settings)).to eq "up"
-        expect(TorProcessManager.tor_running_on_port?(@tpm.settings[:tor_port]))
+        expect(TorProcessManager.tor_running_on?(port: @tpm.settings[:tor_port]))
             .to be_truthy
         @tpm.stop
       end
 
-      it "should not be true if Tor is not running on port" do
-        expect(TorProcessManager.tor_running_on_port?(@tpm.settings[:tor_port]))
+      it "is not true if Tor is not running on port" do
+        expect(TorProcessManager.tor_running_on?(port: @tpm.settings[:tor_port]))
             .to be_falsey
+      end
+
+      it "is true if Tor is running on port and current pid is tor parent_pid" do
+        @tpm.start
+        expect(tor_process_status(@tpm.settings)).to eq "up"
+        expect(TorProcessManager.tor_running_on?(port: @tpm.settings[:tor_port],
+                      parent_pid: @tpm.settings[:parent_pid]))
+            .to be_truthy
+        expect(TorProcessManager.tor_running_on?(port: @tpm.settings[:tor_port],
+                                                 parent_pid: @tpm.settings[:parent_pid] + 1))
+            .to be_falsey
+        @tpm.stop
       end
     end
   end
