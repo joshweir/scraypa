@@ -9,7 +9,14 @@ module Scraypa
       @tor_options = nil
       @driver = nil
       @driver_options = nil
-      @god_tor_config_template = nil
+      @eye_tor_config_template = nil
+      initialize_tor @tor_options if @tor
+    end
+
+    private
+
+    def initialize_tor params={}
+
     end
   end
 end

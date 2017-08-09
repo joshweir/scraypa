@@ -9,9 +9,7 @@ module Scraypa
     attr_accessor :settings, :ip
 
     def initialize params={}
-      @settings = {}
-      @settings[:tor_port] = params.fetch(:tor_port, 9050)
-      @settings[:control_port] = params.fetch(:control_port, 50500)
+      @tor_process_manager = params.fetch(:tor_process_manager, nil)
       @ip = nil
       @endpoint_change_attempts = 5
     end
@@ -35,22 +33,34 @@ module Scraypa
 
     def ensure_tor_is_available
       raise "Cannot proceed, Tor is not running on port " +
-                "#{@settings[:tor_port]}" unless
-          TorProcessManager.tor_running_on_port? @settings[:tor_port]
+                "#{@tor_process_manager.settings[:tor_port]}" unless
+          TorProcessManager.tor_running_on_port? @tor_process_manager.settings[:tor_port]
     end
 
     def tor_endpoint_ip
-      ip = nil
-      proxy do
-        ip = RestClient::Request
-            .execute(method: :get,
-                     url: 'http://bot.whatismyipaddress.com')
-            .to_str
-      end
-      ip
+      try_getting_endpoint_ip_restart_tor_and_retry_on_fail attempts: 2
     rescue Exception => ex
       puts "Error getting ip: #{ex.to_s}"
       return nil
+    end
+
+    def try_getting_endpoint_ip_restart_tor_and_retry_on_fail params={}
+      ip = nil
+      (params[:attempts] || 2).times do |attempt|
+        begin
+          proxy do
+            ip = RestClient::Request
+                     .execute(method: :get,
+                              url: 'http://bot.whatismyipaddress.com')
+                     .to_str
+          end
+          break if ip
+        rescue Exception => ex
+          @tor_process_manager.stop
+          @tor_process_manager.start
+        end
+      end
+      ip
     end
 
     def get_new_tor_endpoint_ip
@@ -67,7 +77,7 @@ module Scraypa
 
     def tor_switch_endpoint
       disable_socks_server
-      Tor::Controller.connect(:port => @settings[:control_port]) do |tor|
+      Tor::Controller.connect(:port => @tor_process_manager.settings[:control_port]) do |tor|
         tor.authenticate("")
         tor.signal("newnym")
         sleep 10
@@ -76,7 +86,7 @@ module Scraypa
 
     def enable_socks_server
       TCPSocket::socks_server = "127.0.0.1"
-      TCPSocket::socks_port = @settings[:tor_port]
+      TCPSocket::socks_port = @tor_process_manager.settings[:tor_port]
     end
 
     def disable_socks_server

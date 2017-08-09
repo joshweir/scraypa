@@ -27,6 +27,7 @@ module Scraypa
       @settings[:tor_log_switch] = params.fetch(:tor_log_switch, nil)
       @settings[:eye_logging] = params.fetch(:eye_logging, nil)
       @settings[:tor_logging] = params.fetch(:tor_logging, nil)
+      @settings[:dont_remove_tor_config] = params.fetch(:dont_remove_tor_config, nil)
     end
 
     def start
@@ -35,6 +36,7 @@ module Scraypa
 
     def stop
       EyeManager.stop application: eye_app_name, process: 'tor'
+      remove_eye_tor_config unless @settings[:dont_remove_tor_config]
       ensure_tor_is_down
     end
 
@@ -128,7 +130,7 @@ module Scraypa
     end
 
     def remove_settings_that_are_not_eye_tor_config_template_keywords keywords
-      keywords - ['eye_tor_config_template', 'control_password']
+      keywords - ['eye_tor_config_template', 'control_password', 'dont_remove_tor_config']
     end
 
     def make_dirs
@@ -168,6 +170,10 @@ module Scraypa
                   "#{File.join(@settings[:log_dir],
                                eye_app_name + ".log")}" if i >= 9
       end
+    end
+
+    def remove_eye_tor_config
+      File.delete(eye_config_filename) if File.exists?(eye_config_filename)
     end
 
     def random_password

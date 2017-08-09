@@ -7,21 +7,21 @@ RSpec.describe Scraypa do
     expect(Scraypa::VERSION).not_to be nil
   end
 
-  describe "verify puffing billy poltergeist is working", type: :feature,
+  describe "puffing billy poltergeist exploratory test", type: :feature,
            driver: :poltergeist_billy do
     before do
       proxy.stub('http://www.google.com/')
           .and_return(:text => "test response")
     end
 
-    it 'test scenario' do
+    it 'stubs google.com' do
       visit "http://www.google.com/"
       expect(page).to have_content('test response')
     end
   end
 
   describe "#visit" do
-    describe "using Rest-Client (not using javascript)" do
+    context "when using Rest-Client (not using javascript)" do
       before do
         stub_request(:get, "http://my.mock.site/page.html").
             with(headers: {'Accept'=>'*/*',
@@ -34,14 +34,14 @@ RSpec.describe Scraypa do
                                   :timeout => 3, :open_timeout => 3)
       end
 
-      it "should utilise rest client to download web content" do
+      it "utilises rest client to download web content" do
         expect(@response.class).to eq(Scraypa::Response)
         expect(@response.native_response.class).to eq(RestClient::Response)
         expect(@response.native_response.to_str).to eq('test response')
       end
     end
 
-    describe "using Capybara (using javascript)" do
+    context "when using Capybara (using javascript)" do
       describe "with headless_chromium driver" do
         before do
           Scraypa.configure do |config|
@@ -60,7 +60,7 @@ RSpec.describe Scraypa do
           @response = Scraypa.visit(:url => "http://canihazip.com/s")
         end
 
-        it "should utilise capybara to download web content" do
+        it "utilises capybara to download web content" do
           #Capybara.current_driver = :poltergeist_billy
           #Capybara.javascript_driver = :poltergeist_billy
           #proxy.stub('http://www.google.com/')
@@ -73,7 +73,7 @@ RSpec.describe Scraypa do
           expect(@response.native_response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
         end
 
-        it "should be able to execute javascript" do
+        it "is able to execute javascript" do
           @response.native_response.execute_script(
               "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
           expect(@response.native_response).to have_content('changed')
@@ -94,14 +94,14 @@ RSpec.describe Scraypa do
           @response = Scraypa.visit(:url => "http://canihazip.com/s")
         end
 
-        it "should utilise capybara to download web content" do
+        it "utilises capybara to download web content" do
           expect(@response.class).to eq(Scraypa::Response)
           expect(@response.native_response.class).to eq(Capybara::Session)
           expect(@response.native_response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
           expect(@response.native_response.status_code).to eq(200)
         end
 
-        it "should be able to execute javascript" do
+        it "is able to execute javascript" do
           @response.native_response.execute_script(
               "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
           expect(@response.native_response).to have_content('changed')
