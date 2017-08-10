@@ -120,7 +120,7 @@ RSpec.describe Scraypa do
                 :phantomjs_options => ["--web-security=true"]
             }
           end
-          @response = Scraypa.visit(:url => "http://canihazip.com/s")
+          @response = Scraypa.visit(:url => "http://bot.whatismyipaddress.com")
         end
 
         it "utilises capybara to download web content" do
@@ -143,6 +143,7 @@ RSpec.describe Scraypa do
                          .visit(:method => :get,
                                 url: "http://bot.whatismyipaddress.com")
                          .native_response.to_str
+            puts 'public ip!!!!: ' + @my_ip.to_s
             #@another_ip_check =
             #    Scraypa
             #        .visit(:method => :get,
@@ -165,6 +166,7 @@ RSpec.describe Scraypa do
               }
             end
             @response = Scraypa.visit(url: "http://bot.whatismyipaddress.com")
+            @first_tor_ip = @response.native_response.text
           end
 
           it "verify public ip address has been retrieved before" do
@@ -194,7 +196,7 @@ RSpec.describe Scraypa do
             expect(@response_after_ip_change.native_response)
                 .not_to have_text(@my_ip)
             expect(@response_after_ip_change.native_response)
-                .not_to have_text(@response.native_response.text)
+                .not_to have_text(@first_tor_ip)
           end
 
           it "should be able to execute javascript" do

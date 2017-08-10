@@ -47,9 +47,9 @@ module Scraypa
     def setup_agent
       puts 'setting up agent!!'
       puts Scraypa.configuration.inspect
-      puts @configuration.inspect
       @agent = Scraypa::VisitFactory.build(Scraypa.configuration)
-      reset_tor if using_tor? && !tor_running_in_current_process?
+      using_tor? && !tor_running_in_current_process? ?
+          reset_tor : destruct_tor
     end
 
     def using_tor?

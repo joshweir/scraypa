@@ -44,8 +44,9 @@ module Scraypa
     end
 
     def setup_poltergeist_driver
-      Capybara.default_driver = @config.driver
-      Capybara.register_driver @config.driver do |app|
+      driver_name = (@config.driver.to_s + (@config.tor ? 'tor' : '')).to_sym
+      Capybara.default_driver = driver_name
+      Capybara.register_driver driver_name do |app|
         Capybara::Poltergeist::Driver.new(app, @config.driver_options)
       end
     end
