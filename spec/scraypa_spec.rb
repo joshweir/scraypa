@@ -83,6 +83,18 @@ RSpec.describe Scraypa do
               "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
           expect(@response.native_response).to have_content('changed')
         end
+
+        it "is able to act like a Capybara session" do
+          response = Scraypa.visit(:url => "http://unixpapa.com/js/testmouse.html")
+          response.native_response.current_window.resize_to(1000, 1000)
+          expect(response.native_response.find("textarea").value).to eq ""
+          response.native_response.click_link "click here to test"
+          expect(response.native_response.find("textarea").value).to_not eq ""
+          response.native_response.click_link "click here to clear"
+          expect(response.native_response.find("textarea").value).to eq ""
+          response.native_response.click_link("IE attachEvent")
+          expect(response.native_response.current_path).to eq "/js/testmouse-ie.html"
+        end
       end
 
       describe "with poltergeist driver" do
@@ -112,8 +124,8 @@ RSpec.describe Scraypa do
           expect(@response.native_response).to have_content('changed')
         end
 
-        it_behaves_like 'a javascript-enabled web agent (using Capybara)',
-                        driver: :poltergeist
+        #it_behaves_like 'a javascript-enabled web agent (using Capybara)',
+        #                driver: :poltergeist
 
         it_behaves_like 'a Tor-able web agent',
                         use_capybara: true,
