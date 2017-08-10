@@ -40,11 +40,12 @@ module Scraypa
         else
           raise "Currently no support for capybara driver: #{@config.driver}"
       end
-      puts Capybara.drivers.inspect
+      #puts Capybara.drivers.inspect
     end
 
     def setup_poltergeist_driver
-      driver_name = (@config.driver.to_s + (@config.tor ? 'tor' : '')).to_sym
+      driver_name = (@config.driver.to_s +
+          (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : '')).to_sym
       Capybara.default_driver = driver_name
       Capybara.register_driver driver_name do |app|
         Capybara::Poltergeist::Driver.new(app, @config.driver_options)
