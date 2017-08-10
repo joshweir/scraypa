@@ -13,7 +13,7 @@ RSpec.describe Scraypa do
 
   describe "puffing billy poltergeist exploratory test", type: :feature,
            driver: :poltergeist_billy do
-    before do
+    before :all do
       proxy.stub('http://www.google.com/')
           .and_return(:text => "test response")
     end
@@ -24,9 +24,34 @@ RSpec.describe Scraypa do
     end
   end
 
+  it 'check if tor will work if used first' do
+    Scraypa.configure do |config|
+      config.use_capybara = true
+      config.tor = true
+      config.tor_options = {
+          tor_port: 9055,
+          control_port: 50500
+      }
+      config.driver = :poltergeist
+      config.driver_options = {
+          :phantomjs => Phantomjs.path,
+          :js_errors => false,
+          :phantomjs_options => ["--web-security=false", "--ignore-ssl-errors=yes", "--ssl-protocol=any", "--proxy-type=socks5",
+                                 "--proxy=127.0.0.1:9055"]
+      }
+    end
+    @response = Scraypa.visit(url: "http://bot.whatismyipaddress.com")
+    puts @response.native_response.text
+    Scraypa.change_tor_ip_address
+    @response = Scraypa.visit(url: "http://bot.whatismyipaddress.com")
+    puts @response.native_response.text
+    expect(@response.native_response.text).to eq("eff")
+  end
+
   describe "#visit" do
     context "when using Rest-Client (not using javascript)" do
-      before do
+      before :all do
+        Scraypa.reset
         stub_request(:get, "http://my.mock.site/page.html").
             with(headers: {'Accept'=>'*/*',
                            'Accept-Encoding'=>'gzip, deflate',
@@ -47,7 +72,7 @@ RSpec.describe Scraypa do
 
     context "when using Capybara (using javascript)" do
       describe "with headless_chromium driver" do
-        before do
+        before :all do
           Scraypa.configure do |config|
             config.use_capybara = true
             config.driver = :headless_chromium
@@ -85,7 +110,7 @@ RSpec.describe Scraypa do
       end
 
       describe "with poltergeist driver" do
-        before do
+        before :all do
           Scraypa.configure do |config|
             config.use_capybara = true
             config.driver = :poltergeist
@@ -112,17 +137,17 @@ RSpec.describe Scraypa do
         end
 
         describe "through Tor" do
-          before do
+          before :all do
             Scraypa.reset
             @my_ip = Scraypa
                          .visit(:method => :get,
                                 url: "http://bot.whatismyipaddress.com")
                          .native_response.to_str
-            @another_ip_check =
-                Scraypa
-                    .visit(:method => :get,
-                           url: "http://canihazip.com/s")
-                    .native_response.to_str
+            #@another_ip_check =
+            #    Scraypa
+            #        .visit(:method => :get,
+            #               url: "http://canihazip.com/s")
+            #        .native_response.to_str
 
             Scraypa.configure do |config|
               config.use_capybara = true
@@ -135,19 +160,20 @@ RSpec.describe Scraypa do
               config.driver_options = {
                   :phantomjs => Phantomjs.path,
                   :js_errors => false,
-                  :phantomjs_options => ["--web-security=true"]
+                  :phantomjs_options => ["--web-security=false", "--ignore-ssl-errors=yes", "--ssl-protocol=any", "--proxy-type=socks5",
+                                         "--proxy=127.0.0.1:9055"]
               }
             end
-            @response = Scraypa.visit(url: "http://canihazip.com/s")
+            @response = Scraypa.visit(url: "http://bot.whatismyipaddress.com")
           end
 
           it "verify public ip address has been retrieved before" do
             expect(@my_ip).to match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
           end
 
-          it "verify successful match with current ip address using canihazip.com" do
-            expect(@another_ip_check).to eq(@my_ip)
-          end
+          #it "verify successful match with current ip address using canihazip.com" do
+          #  expect(@another_ip_check).to eq(@my_ip)
+          #end
 
           it "should have a different ip address to current public ip address" do
             expect(@response.native_response.class).to eq(Capybara::Session)
@@ -157,9 +183,11 @@ RSpec.describe Scraypa do
           end
 
           it "should be able to change ip address" do
+            #expect(Scraypa.configuration).to be_nil
+            #expect(Scraypa.configuration.tor_controller).not_to be_nil
             Scraypa.change_tor_ip_address
             @response_after_ip_change =
-                Scraypa.visit(url: "http://canihazip.com/s")
+                Scraypa.visit(url: "http://bot.whatismyipaddress.com")
             expect(@response_after_ip_change.native_response)
                 .to have_content(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
             expect(@response_after_ip_change.native_response.status_code).to eq(200)

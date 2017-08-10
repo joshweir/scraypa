@@ -13,7 +13,7 @@ module Scraypa
     end
 
     def execute params={}
-      @config.tor_controller ?
+      @config.tor && Scraypa.tor_controller ?
         visit_get_response_through_tor(params) :
         visit_get_response(params)
     end
@@ -21,7 +21,7 @@ module Scraypa
     private
 
     def visit_get_response_through_tor params={}
-      @config.tor_controller.proxy do
+      Scraypa.tor_controller.proxy do
         return visit_get_response params
       end
     end
@@ -40,6 +40,7 @@ module Scraypa
         else
           raise "Currently no support for capybara driver: #{@config.driver}"
       end
+      puts Capybara.drivers.inspect
     end
 
     def setup_poltergeist_driver

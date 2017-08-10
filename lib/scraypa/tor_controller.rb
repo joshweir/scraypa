@@ -27,6 +27,8 @@ module Scraypa
     def proxy
       enable_socks_server
       yield.tap { disable_socks_server }
+    ensure
+      disable_socks_server
     end
 
     private
@@ -34,7 +36,8 @@ module Scraypa
     def ensure_tor_is_available
       raise "Cannot proceed, Tor is not running on port " +
                 "#{@tor_process_manager.settings[:tor_port]}" unless
-          TorProcessManager.tor_running_on_port? @tor_process_manager.settings[:tor_port]
+          TorProcessManager.tor_running_on? port: @tor_process_manager.settings[:tor_port],
+              parent_pid: @tor_process_manager.settings[:parent_pid]
     end
 
     def tor_endpoint_ip
