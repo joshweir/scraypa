@@ -28,7 +28,7 @@ module Scraypa
 
     def visit_get_response params={}
       Capybara.visit params[:url]
-      wrap_response Capybara.page
+      Capybara.page
     end
 
     def setup_driver
@@ -57,10 +57,6 @@ module Scraypa
       Capybara.register_driver @config.driver do |app|
         Capybara::Selenium::Driver.new(app, @config.driver_options)
       end
-    end
-
-    def wrap_response native_response
-      Scraypa::Response.new native_response: native_response
     end
   end
 end

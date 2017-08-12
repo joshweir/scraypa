@@ -22,11 +22,7 @@ module Scraypa
     end
 
     def visit_get_response params={}
-      wrap_response RestClient::Request.execute params
-    end
-
-    def wrap_response native_response
-      Scraypa::Response.new native_response: native_response
+      RestClient::Request.execute params
     end
   end
 end
