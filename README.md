@@ -1,6 +1,6 @@
 # Scraypa (in development - not ready to be used)
 
-Scrape web content with configuration options including: 
+A Ruby gem to scrape web content with configuration options including: 
  
 1. [Javscript support](#javascript-support)
 2. [The Onion Router (Tor)](#tor)
@@ -9,6 +9,11 @@ Scrape web content with configuration options including:
 Scraypa is essentially a wrapper for the light-weight 
 [Rest Client](https://github.com/rest-client/rest-client) (if you dont require javascript support)
  or [Capybara](https://github.com/teamcapybara/capybara) (for Javascript support). 
+
+## Why? 
+
+A web scraper that can be configured to support javascript and/or Tor. If javascript is not required, 
+ it will use the lighter Rest Client. Scraypa is an attempt to remove the complexities associated to web agent setup. 
 
 ## Installation
 
@@ -56,10 +61,10 @@ Or install it yourself as:
     response = Scraypa.visit(method: :get,
                              url: "http://example.com")
     
-    #the response.native_response contains the RestClient response object
-    response.native_response.code
+    #the response contains the RestClient response object
+    response.code
     #-> 200
-    response.native_response.to_str
+    response.to_str
     #-> http://example.com content
     
 By default Scraypa uses the rest-client gem which does
@@ -106,16 +111,16 @@ Capybara is used for Javascript support:
     #when using capybara, just the url parameter is required:
     response = Scraypa.visit(url: "http://example.com")
     
-    #the response.native_response contains the capybara page object
-    response.native_response.status_code
+    #the response contains the capybara page object
+    response.status_code
     #-> 200
-    response.native_response.text
+    response.text
     #-> http://example.com content 
     
     #execute some javascript:
-    response.native_response.execute_script(
+    response.execute_script(
       "document.getElementsByTagName('body')[0].innerHTML = 'changed content';")
-    response.native_response.text
+    response.text
     #-> "changed content"
 
 ### Tor

@@ -28,6 +28,7 @@ module Scraypa
 
     def configure
       yield(configuration).tap{
+        validate_configuration
         setup_agent
       }
     end
@@ -38,58 +39,52 @@ module Scraypa
     end
 
     def change_tor_ip_address
-      Scraypa.tor_controller.get_new_ip if using_tor?
+      @tor_controller.get_new_ip if using_tor?
     end
 
     private
 
+    def validate_configuration
+      headless_chromium_with_tor_is_invalid
+    end
+
+    def headless_chromium_with_tor_is_invalid
+      raise "Capybara :headless_chromium does not support Tor" if
+          using_tor? && @configuration.driver == :headless_chromium
+    end
+
     def setup_agent
-      #puts 'setting up agent!!'
-      #puts Scraypa.configuration.inspect
-      @agent = Scraypa::VisitFactory.build(Scraypa.configuration)
+      @agent = Scraypa::VisitFactory.build(@configuration)
       using_tor? && !tor_running_in_current_process? ?
           reset_tor : destruct_tor
     end
 
     def using_tor?
-      config = Scraypa.configuration
-      config.tor && config.tor_options
+      @configuration.tor && @configuration.tor_options
     end
 
     def tor_running_in_current_process?
-      config = Scraypa.configuration
-      TorProcessManager.tor_running_on?(port: config.tor_options[:tor_port],
+      TorProcessManager.tor_running_on?(port: @configuration.tor_options[:tor_port],
                                              parent_pid: Process.pid)
     end
 
     def reset_tor
       destruct_tor
-      config = Scraypa.configuration
-      initialize_tor(config.tor_options) if config.tor
+      initialize_tor(@configuration.tor_options) if @configuration.tor
     end
 
     def initialize_tor params={}
-      #config = Scraypa.configuration
-      #configure do |config|
-      #  config.tor_process_manager = TorProcessManager.new params
-      #  config.tor_controller = TorController.new(
-      #      tor_process_manager: config.tor_process_manager)
-      #end
-      Scraypa.tor_process_manager = TorProcessManager.new params
-      Scraypa.tor_controller = TorController.new(
-                tor_process_manager: Scraypa.tor_process_manager)
-      Scraypa.tor_process_manager.start
+      @tor_process_manager = TorProcessManager.new params
+      @tor_controller = TorController.new(
+                tor_process_manager: @tor_process_manager)
+      @tor_process_manager.start
     end
 
     def destruct_tor
-      Scraypa.tor_process_manager.stop if Scraypa.tor_process_manager
+      @tor_process_manager.stop if @tor_process_manager
       TorProcessManager.stop_obsolete_processes
-      #configure do |config|
-      #  config.tor_controller = nil
-      #  config.tor_process_manager = nil
-      #end
-      Scraypa.tor_controller = nil
-      Scraypa.tor_process_manager = nil
+      @tor_controller = nil
+      @tor_process_manager = nil
     end
   end
 end

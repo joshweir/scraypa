@@ -1,5 +1,6 @@
 RSpec.shared_examples "a javascript-enabled web agent (using Capybara)" do |params|
   before :all do
+    Scraypa.reset
     Scraypa.configure do |config|
       config.use_capybara = true
       config.driver = params[:driver]

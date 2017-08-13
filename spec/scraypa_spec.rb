@@ -51,6 +51,32 @@ RSpec.describe Scraypa do
       describe "with headless_chromium driver" do
         it_behaves_like 'a javascript-enabled web agent (using Capybara)',
                         driver: :headless_chromium
+
+        #it_behaves_like 'a Tor-able web agent',
+        #                use_capybara: true,
+        #                driver: :headless_chromium
+        it "does not support Tor" do
+          expect {
+            Scraypa.configure do |config|
+              config.tor = true
+              config.tor_options = {
+                  tor_port: 9055,
+                  control_port: 50500
+              }
+              config.use_capybara = true
+              config.driver = :headless_chromium
+              config.driver_options = {
+                  browser: :chrome,
+                  desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+                      "chromeOptions" => {
+                          'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                          'args' => ["no-sandbox", "disable-gpu", "headless"]
+                      }
+                  )
+              }
+            end
+          }.to raise_error /headless_chromium does not support Tor/
+        end
       end
 
       describe "with poltergeist driver" do
