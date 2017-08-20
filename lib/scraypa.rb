@@ -4,13 +4,14 @@ require "scraypa/visit_interface"
 require "scraypa/visit_rest_client"
 require "scraypa/visit_capabara"
 require "scraypa/visit_factory"
-require "scraypa/tor_process_manager"
-require "scraypa/process_helper"
-require "scraypa/tor_controller"
+#require "scraypa/tor_process_manager"
+#require "scraypa/process_helper"
+#require "scraypa/tor_controller"
+require 'tormanager'
 
 module Scraypa
   class << self
-    attr_accessor :agent, :tor_process_manager, :tor_controller
+    attr_reader :agent, :tor_process, :tor_ip_control, :tor_proxy
 
     def configuration
       @configuration ||= Configuration.new
@@ -39,13 +40,14 @@ module Scraypa
     end
 
     def change_tor_ip_address
-      @tor_controller.get_new_ip if using_tor?
+      @tor_ip_control.get_new_ip if using_tor?
     end
 
     private
 
     def validate_configuration
       headless_chromium_with_tor_is_invalid
+      tor_options_is_required_with_use_tor
     end
 
     def headless_chromium_with_tor_is_invalid
@@ -53,10 +55,16 @@ module Scraypa
           using_tor? && @configuration.driver == :headless_chromium
     end
 
+    def tor_options_is_required_with_use_tor
+      raise ":tor_options is required if :use_tor is true" if
+          @configuration.use_tor && !@configuration.tor_options
+    end
+
     def setup_agent
       @agent = Scraypa::VisitFactory.build(@configuration)
       using_tor? && !tor_running_in_current_process? ?
-          reset_tor : destruct_tor
+          reset_tor :
+          (!using_tor? && tor_running_in_current_process? ? destruct_tor : nil)
     end
 
     def using_tor?
@@ -64,8 +72,10 @@ module Scraypa
     end
 
     def tor_running_in_current_process?
-      TorProcessManager.tor_running_on?(port: @configuration.tor_options[:tor_port],
-                                             parent_pid: Process.pid)
+      @configuration.tor_options && @configuration.tor_options[:tor_port] ?
+        TorManager::TorProcess
+            .tor_running_on?(port: @configuration.tor_options[:tor_port],
+                             parent_pid: Process.pid) : false
     end
 
     def reset_tor
@@ -74,17 +84,19 @@ module Scraypa
     end
 
     def initialize_tor params={}
-      @tor_process_manager = TorProcessManager.new params
-      @tor_controller = TorController.new(
-                tor_process_manager: @tor_process_manager)
-      @tor_process_manager.start
+      @tor_process = TorManager::TorProcess.new params
+      @tor_proxy = TorManager::Proxy.new tor_process: @tor_process
+      @tor_ip_control = TorManager::IpAddressControl.new(
+                tor_process: @tor_process, tor_proxy: @tor_proxy)
+      @tor_process.start
     end
 
     def destruct_tor
-      @tor_process_manager.stop if @tor_process_manager
-      TorProcessManager.stop_obsolete_processes
-      @tor_controller = nil
-      @tor_process_manager = nil
+      @tor_process.stop if @tor_process
+      TorManager::TorProcess.stop_obsolete_processes
+      @tor_ip_control = nil
+      @tor_proxy = nil
+      @tor_process = nil
     end
   end
 end

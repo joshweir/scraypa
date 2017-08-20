@@ -10,40 +10,6 @@ RSpec.describe Scraypa do
   it "has a version number" do
     expect(Scraypa::VERSION).not_to be nil
   end
-
-  describe ".configure" do
-    it "initializes a new Scraypa::Configuration instance updating" +
-           " properties from the configure block"
-
-    it "updates properties on an existing Scraypa::Configuration instance"
-
-    it "validates that :headless_chromium will not work with Tor"
-
-    it_behaves_like "a web agent setter-upper-er"
-  end
-
-  describe ".configuration" do
-    it "returns a new Scraypa::Configuration instance when initially called" do
-      config = Scraypa.configuration
-      expect(config.class).to eq Scraypa::Configuration
-      expect(config.use_capybara).to be_nil
-    end
-
-    it "returns the configuration instance that has already been configured" do
-      Scraypa.configure do |config|
-        config.use_capybara = true
-        config.driver = :poltergeist
-      end
-      expect(Scraypa.configuration.use_capybara).to be_truthy
-    end
-  end
-
-  describe ".reset" do
-    it "resets the configuration instance"
-
-    it_behaves_like "a web agent setter-upper-er"
-  end
-
 =begin
   describe "puffing billy poltergeist exploratory test", type: :feature,
            driver: :poltergeist_billy do
@@ -58,8 +24,6 @@ RSpec.describe Scraypa do
     end
   end
 =end
-
-=begin
   describe "#visit" do
     context "when using Rest-Client (not using javascript)" do
       before :all do
@@ -125,5 +89,4 @@ RSpec.describe Scraypa do
       end
     end
   end
-=end
 end
