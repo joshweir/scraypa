@@ -16,4 +16,15 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  def scraypa_reset_mock_shell
+    #expect(TorManager::TorProcess)
+    #    .to receive(:tor_running_on?)
+    #            .with(port: 9050,
+    #                  parent_pid: Process.pid)
+    #            .and_return(false)
+    expect(Scraypa).to receive(:setup_agent)
+    expect(Scraypa).to_not receive(:destruct_tor)
+    expect(Scraypa).to_not receive(:reset_tor)
+  end
 end

@@ -8,10 +8,10 @@ RSpec.shared_examples "a Tor-able web agent" do |params|
 
     Scraypa.configure do |config|
       config.tor = true
-      config.tor_options = {
-          tor_port: 9055,
-          control_port: 50500
-      }
+      #config.tor_options = {
+      #    tor_port: 9055,
+      #    control_port: 50500
+      #}
       if params && params[:use_capybara]
         config.use_capybara = true
         if params[:driver] == :poltergeist
@@ -21,7 +21,7 @@ RSpec.shared_examples "a Tor-able web agent" do |params|
               :js_errors => false,
               :phantomjs_options => ["--web-security=false", "--ignore-ssl-errors=yes",
                                      "--ssl-protocol=any", "--proxy-type=socks5",
-                                     "--proxy=127.0.0.1:9055"]
+                                     "--proxy=127.0.0.1:9050"]
           }
         elsif params[:driver] == :headless_chromium
           config.driver = :headless_chromium
@@ -31,9 +31,9 @@ RSpec.shared_examples "a Tor-able web agent" do |params|
                   "chromeOptions" => {
                       'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
                       'args' => ["no-sandbox", "disable-gpu", "headless",
-                                 "proxy-server=socks5://127.0.0.1:9055"]
+                                 "proxy-server=socks5://127.0.0.1:9050"]
                   }#,
-                  #:proxy => Selenium::WebDriver::Proxy.new(http: "127.0.0.1:9055")
+                  #:proxy => Selenium::WebDriver::Proxy.new(http: "127.0.0.1:9050")
               )
           }
         else

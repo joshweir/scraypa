@@ -4,12 +4,11 @@ require "scraypa/visit_interface"
 require "scraypa/visit_rest_client"
 require "scraypa/visit_capabara"
 require "scraypa/visit_factory"
-#require "scraypa/tor_process_manager"
-#require "scraypa/process_helper"
-#require "scraypa/tor_controller"
 require 'tormanager'
 
 module Scraypa
+  TorNotSupportedByAgent = Class.new(StandardError)
+
   class << self
     attr_reader :agent, :tor_process, :tor_ip_control, :tor_proxy
 
@@ -47,35 +46,39 @@ module Scraypa
 
     def validate_configuration
       headless_chromium_with_tor_is_invalid
-      tor_options_is_required_with_use_tor
     end
 
     def headless_chromium_with_tor_is_invalid
-      raise "Capybara :headless_chromium does not support Tor" if
+      raise TorNotSupportedByAgent,
+            "Capybara :headless_chromium does not support Tor" if
           using_tor? && @configuration.driver == :headless_chromium
     end
 
-    def tor_options_is_required_with_use_tor
-      raise ":tor_options is required if :use_tor is true" if
-          @configuration.use_tor && !@configuration.tor_options
-    end
-
     def setup_agent
+      ensure_tor_options_are_configured if using_tor?
       @agent = Scraypa::VisitFactory.build(@configuration)
       using_tor? && !tor_running_in_current_process? ?
           reset_tor :
-          (!using_tor? && tor_running_in_current_process? ? destruct_tor : nil)
+          (!using_tor? &&
+              tor_running_in_current_process? ?
+              destruct_tor : nil)
+    end
+
+    def ensure_tor_options_are_configured
+      @configuration.tor_options ||= {}
+      @configuration.tor_options[:tor_port] ||= 9050
+      @configuration.tor_options[:control_port] ||= 50500
     end
 
     def using_tor?
-      @configuration.tor && @configuration.tor_options
+      @configuration.tor
     end
 
     def tor_running_in_current_process?
-      @configuration.tor_options && @configuration.tor_options[:tor_port] ?
-        TorManager::TorProcess
-            .tor_running_on?(port: @configuration.tor_options[:tor_port],
-                             parent_pid: Process.pid) : false
+      TorManager::TorProcess
+            .tor_running_on?(port: @configuration.tor_options &&
+                                   @configuration.tor_options[:tor_port] || 9050,
+                             parent_pid: Process.pid)
     end
 
     def reset_tor
@@ -84,7 +87,7 @@ module Scraypa
     end
 
     def initialize_tor params={}
-      @tor_process = TorManager::TorProcess.new params
+      @tor_process = TorManager::TorProcess.new params || {}
       @tor_proxy = TorManager::Proxy.new tor_process: @tor_process
       @tor_ip_control = TorManager::IpAddressControl.new(
                 tor_process: @tor_process, tor_proxy: @tor_proxy)

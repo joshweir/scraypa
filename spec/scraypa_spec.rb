@@ -3,26 +3,69 @@ require "spec_helper"
 WebMock.allow_net_connect!(allow_localhost: true)
 
 RSpec.describe Scraypa do
-  before :all do
-    EyeManager.destroy
-  end
-
   it "has a version number" do
     expect(Scraypa::VERSION).not_to be nil
   end
 
   describe ".configure" do
+    before do
+      scraypa_reset_mock_shell
+      Scraypa.reset
+    end
+
     it "initializes a new Scraypa::Configuration instance updating" +
-           " properties from the configure block"
+           " properties from the configure block" do
+      #allow(TorManager::TorProcess)
+      #    .to receive(:tor_running_on?)
+      #            .with(port: 9050,
+      #                  parent_pid: Process.pid)
+      #            .and_return(false)
+      expect(Scraypa).to receive(:setup_agent)
+      Scraypa.configure { |c|
+        c.use_capybara = true
+        c.driver = :poltergeist
+      }
+      config = Scraypa.configuration
+      expect(config.use_capybara).to be_truthy
+      expect(config.driver).to eq :poltergeist
+      expect(config.tor).to be_nil
+    end
 
-    it "updates properties on an existing Scraypa::Configuration instance"
+    it "updates properties on an existing Scraypa::Configuration instance" do
+      expect(Scraypa).to receive(:setup_agent)
+      Scraypa.configure { |c|
+        c.use_capybara = true
+        c.driver = :poltergeist
+      }
+      config = Scraypa.configuration
+      expect(config.use_capybara).to be_truthy
+      expect(Scraypa).to receive(:setup_agent)
+      Scraypa.configure { |c|
+        c.use_capybara = nil
+        c.driver = nil
+      }
+      config = Scraypa.configuration
+      expect(config.use_capybara).to be_nil
+    end
 
-    it "validates that :headless_chromium will not work with Tor"
+    it "validates that :headless_chromium will not work with Tor" do
+      expect{Scraypa.configure {|c|
+        c.tor = true
+        c.use_capybara = true
+        c.driver = :headless_chromium
+      }}.to raise_error Scraypa::TorNotSupportedByAgent,
+                        /Capybara :headless_chromium does not support Tor/
+    end
 
     it_behaves_like "a web agent setter-upper-er"
   end
 
   describe ".configuration" do
+    before do
+      scraypa_reset_mock_shell
+      Scraypa.reset
+    end
+
     it "returns a new Scraypa::Configuration instance when initially called" do
       config = Scraypa.configuration
       expect(config.class).to eq Scraypa::Configuration
@@ -30,6 +73,7 @@ RSpec.describe Scraypa do
     end
 
     it "returns the configuration instance that has already been configured" do
+      expect(Scraypa).to receive(:setup_agent)
       Scraypa.configure do |config|
         config.use_capybara = true
         config.driver = :poltergeist
@@ -39,9 +83,29 @@ RSpec.describe Scraypa do
   end
 
   describe ".reset" do
-    it "resets the configuration instance"
+    it "resets the configuration instance" do
+      scraypa_reset_mock_shell
+      Scraypa.reset
+      expect(Scraypa.configuration.use_capybara).to be_nil
+    end
 
     it_behaves_like "a web agent setter-upper-er"
+  end
+
+  describe ".visit" do
+    context "when using default config: Rest-Client (not using javascript)" do
+      it "utilises rest client to download web content"
+    end
+
+    context "when using Capybara (using javascript)" do
+      context "with headless_chromium driver" do
+        it "utilises capybara to download web content"
+      end
+
+      context "with poltergeist driver" do
+        it "utilises capybara to download web content"
+      end
+    end
   end
 
 =begin

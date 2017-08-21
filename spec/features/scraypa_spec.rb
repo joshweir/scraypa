@@ -24,7 +24,7 @@ RSpec.describe Scraypa do
     end
   end
 =end
-  describe "#visit" do
+  describe ".visit" do
     context "when using Rest-Client (not using javascript)" do
       before :all do
         Scraypa.reset
