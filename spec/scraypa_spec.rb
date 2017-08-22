@@ -8,11 +8,6 @@ RSpec.describe Scraypa do
   end
 
   describe ".configure" do
-    before do
-      scraypa_reset_mock_shell
-      Scraypa.reset
-    end
-
     it "initializes a new Scraypa::Configuration instance updating" +
            " properties from the configure block" do
       #allow(TorManager::TorProcess)
@@ -20,6 +15,8 @@ RSpec.describe Scraypa do
       #            .with(port: 9050,
       #                  parent_pid: Process.pid)
       #            .and_return(false)
+      scraypa_reset_mock_shell
+      Scraypa.reset
       expect(Scraypa).to receive(:setup_agent)
       Scraypa.configure { |c|
         c.use_capybara = true
@@ -32,6 +29,8 @@ RSpec.describe Scraypa do
     end
 
     it "updates properties on an existing Scraypa::Configuration instance" do
+      scraypa_reset_mock_shell
+      Scraypa.reset
       expect(Scraypa).to receive(:setup_agent)
       Scraypa.configure { |c|
         c.use_capybara = true
@@ -49,6 +48,8 @@ RSpec.describe Scraypa do
     end
 
     it "validates that :headless_chromium will not work with Tor" do
+      scraypa_reset_mock_shell
+      Scraypa.reset
       expect{Scraypa.configure {|c|
         c.tor = true
         c.use_capybara = true
@@ -115,7 +116,6 @@ RSpec.describe Scraypa do
       proxy.stub('http://www.google.com/')
           .and_return(:text => "test response")
     end
-
     it 'stubs google.com' do
       visit "http://www.google.com/"
       expect(page).to have_content('test response')
@@ -138,20 +138,16 @@ RSpec.describe Scraypa do
                                   :url => "http://my.mock.site/page.html",
                                   :timeout => 3, :open_timeout => 3)
       end
-
       it "utilises rest client to download web content" do
         expect(@response.class).to eq(RestClient::Response)
         expect(@response.to_str).to eq('test response')
       end
-
       it_behaves_like 'a Tor-able web agent'
     end
-
     context "when using Capybara (using javascript)" do
       describe "with headless_chromium driver" do
         it_behaves_like 'a javascript-enabled web agent (using Capybara)',
                         driver: :headless_chromium
-
         #it_behaves_like 'a Tor-able web agent',
         #                use_capybara: true,
         #                driver: :headless_chromium
@@ -178,11 +174,9 @@ RSpec.describe Scraypa do
           }.to raise_error /headless_chromium does not support Tor/
         end
       end
-
       describe "with poltergeist driver" do
         it_behaves_like 'a javascript-enabled web agent (using Capybara)',
                         driver: :poltergeist
-
         it_behaves_like 'a Tor-able web agent',
                         use_capybara: true,
                         driver: :poltergeist

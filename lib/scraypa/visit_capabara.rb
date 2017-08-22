@@ -5,6 +5,8 @@ require 'phantomjs'
 module Scraypa
   include Capybara::DSL
 
+  CapybaraDriverUnsupported = Class.new(StandardError)
+
   class VisitCapybara < VisitInterface
     def initialize *args
       super(*args)
@@ -38,7 +40,8 @@ module Scraypa
         when :headless_chromium
           setup_headless_chromium_driver
         else
-          raise "Currently no support for capybara driver: #{@config.driver}"
+          raise CapybaraDriverUnsupported,
+                "Currently no support for capybara driver: #{@config.driver}"
       end
     end
 

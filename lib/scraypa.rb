@@ -75,10 +75,13 @@ module Scraypa
     end
 
     def tor_running_in_current_process?
-      TorManager::TorProcess
-            .tor_running_on?(port: @configuration.tor_options &&
-                                   @configuration.tor_options[:tor_port] || 9050,
-                             parent_pid: Process.pid)
+      @configuration.tor_options &&
+          @configuration.tor_options[:tor_port] ?
+          TorManager::TorProcess
+              .tor_running_on?(port: @configuration.tor_options[:tor_port],
+                               parent_pid: Process.pid) :
+          TorManager::TorProcess
+              .tor_running_on?(parent_pid: Process.pid)
     end
 
     def reset_tor
@@ -90,7 +93,7 @@ module Scraypa
       @tor_process = TorManager::TorProcess.new params || {}
       @tor_proxy = TorManager::Proxy.new tor_process: @tor_process
       @tor_ip_control = TorManager::IpAddressControl.new(
-                tor_process: @tor_process, tor_proxy: @tor_proxy)
+          tor_process: @tor_process, tor_proxy: @tor_proxy)
       @tor_process.start
     end
 
