@@ -94,17 +94,94 @@ RSpec.describe Scraypa do
   end
 
   describe ".visit" do
+    it "sets up the web agent if it is not yet" do
+      Scraypa.agent = nil
+      expect(Scraypa).to receive(:setup_agent)
+      expect(Scraypa.agent)
+          .to receive(:execute)
+                  .with(method: :get, url: "http://example.com")
+      Scraypa.visit method: :get, url: "http://example.com"
+    end
+
+    it "doesn't setup the web agent if it is already" do
+      Scraypa.reset #reset sets up the agent
+      expect(Scraypa).to_not receive(:setup_agent)
+      expect(Scraypa.agent)
+          .to receive(:execute)
+                  .with(method: :get, url: "http://example.com")
+      Scraypa.visit method: :get, url: "http://example.com"
+    end
+
     context "when using default config: Rest-Client (not using javascript)" do
-      it "utilises rest client to download web content"
+      it "utilises rest client to download web content" do
+        Scraypa.reset
+        expect(RestClient::Request)
+            .to receive(:execute)
+                    .with(method: :get,
+                          url: "http://example.com")
+        Scraypa.visit method: :get, url: "http://example.com"
+      end
+
+      context "with Tor" do
+        it "utilises rest client via tor proxy to download web content" do
+          tor_process, tor_proxy, tor_ip_control = mock_tor_setup
+          Scraypa.configure do |c|
+            c.use_capybara = nil
+            c.tor = true
+          end
+          expect(tor_proxy).to receive(:proxy).and_yield
+          expect(RestClient::Request)
+              .to receive(:execute)
+                      .with(method: :get,
+                            url: "http://example.com")
+          Scraypa.visit method: :get, url: "http://example.com"
+        end
+      end
     end
 
     context "when using Capybara (using javascript)" do
       context "with headless_chromium driver" do
-        it "utilises capybara to download web content"
+        it "utilises capybara to download web content" do
+          allow(Scraypa).to receive(:destruct_tor)
+          Scraypa.configure do |c|
+            c.use_capybara = true
+            c.driver = :headless_chromium
+            c.tor = nil
+          end
+          expect(Capybara)
+              .to receive(:visit).with("http://example.com")
+          Scraypa.visit method: :get, url: "http://example.com"
+        end
       end
 
       context "with poltergeist driver" do
-        it "utilises capybara to download web content"
+        it "utilises capybara to download web content" do
+          allow(Scraypa).to receive(:destruct_tor)
+          Scraypa.configure do |c|
+            c.use_capybara = true
+            c.driver = :poltergeist
+            c.tor = nil
+          end
+          expect(Capybara)
+              .to receive(:visit).with("http://example.com")
+          Scraypa.visit method: :get, url: "http://example.com"
+        end
+
+        context "with Tor" do
+          it "utilises capybara via tor proxy to download web content" do
+            allow(Scraypa).to receive(:destruct_tor)
+            tor_process, tor_proxy, tor_ip_control = mock_tor_setup
+            Scraypa.configure do |c|
+              c.use_capybara = true
+              c.driver = :poltergeist
+              c.tor = true
+            end
+            expect(tor_proxy).to receive(:proxy).and_yield
+            expect(Capybara)
+                .to receive(:visit).with("http://example.com")
+            Scraypa.visit method: :get, url: "http://example.com"
+          end
+        end
       end
     end
   end

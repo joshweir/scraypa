@@ -10,7 +10,7 @@ module Scraypa
   TorNotSupportedByAgent = Class.new(StandardError)
 
   class << self
-    attr_reader :agent, :tor_process, :tor_ip_control, :tor_proxy
+    attr_accessor :agent, :tor_process, :tor_ip_control, :tor_proxy
 
     def configuration
       @configuration ||= Configuration.new
@@ -55,19 +55,22 @@ module Scraypa
     end
 
     def setup_agent
-      ensure_tor_options_are_configured if using_tor?
+      ensure_tor_options_are_configured
       @agent = Scraypa::VisitFactory.build(@configuration)
       using_tor? && !tor_running_in_current_process? ?
           reset_tor :
-          (!using_tor? &&
-              tor_running_in_current_process? ?
+          (!using_tor? && tor_running_in_current_process? ?
               destruct_tor : nil)
     end
 
     def ensure_tor_options_are_configured
-      @configuration.tor_options ||= {}
-      @configuration.tor_options[:tor_port] ||= 9050
-      @configuration.tor_options[:control_port] ||= 50500
+      if using_tor?
+        @configuration.tor_options ||= {}
+        @configuration.tor_options[:tor_port] ||= 9050
+        @configuration.tor_options[:control_port] ||= 50500
+      else
+        @configuration.tor_options = nil
+      end
     end
 
     def using_tor?
