@@ -51,21 +51,4 @@ RSpec.shared_examples "a javascript-enabled web agent (using Capybara)" do |para
     response.click_link("IE attachEvent")
     expect(response.current_path).to eq "/js/testmouse-ie.html"
   end
-
-  context "when customizing the user agent", type: :feature,
-          driver: :poltergeist_billy do
-    before :all do
-      proxy.stub('http://www.google.com/')
-          .and_return(:text => "test response")
-    end
-
-    it 'stubs google.com' do
-      page.driver.add_headers("User-Agent" => "the user agent string you want")
-      visit "http://www.google.com/"
-      expect(page).to have_content('test response')
-      page.execute_script(
-          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      expect(page).to have_content('the user agent string you want')
-    end
-  end
 end

@@ -35,10 +35,12 @@ module Scraypa
 
     def setup_driver
       case @config.driver
-        when :poltergeist, :poltergeist_billy
+        when :poltergeist
           setup_poltergeist_driver
         when :headless_chromium
           setup_headless_chromium_driver
+        when :poltergeist_billy, :selenium_chrome_billy
+          setup_billy_driver
         else
           raise CapybaraDriverUnsupported,
                 "Currently no support for capybara driver: #{@config.driver}"
@@ -52,6 +54,10 @@ module Scraypa
       Capybara.register_driver driver_name do |app|
         Capybara::Poltergeist::Driver.new(app, @config.driver_options)
       end
+    end
+
+    def setup_billy_driver
+      Capybara.javascript_driver = @config.driver
     end
 
     def setup_headless_chromium_driver

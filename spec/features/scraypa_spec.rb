@@ -79,11 +79,11 @@ RSpec.describe Scraypa do
               }
             end
           }.to raise_error /headless_chromium does not support Tor/
-
-          it_behaves_like 'a user agent customizer',
-                          use_capybara: true,
-                          driver: :headless_chromium
         end
+
+        it_behaves_like 'a user agent customizer',
+                        use_capybara: true,
+                        driver: :headless_chromium
       end
 
       describe "with poltergeist driver" do
