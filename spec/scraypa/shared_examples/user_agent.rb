@@ -1,4 +1,4 @@
-RSpec.shared_examples "a javascript-enabled web agent (using Capybara)" do |params|
+RSpec.shared_examples "a user agent customizer" do |params|
   before :all do
     Scraypa.reset
     Scraypa.configure do |config|
@@ -61,6 +61,23 @@ RSpec.shared_examples "a javascript-enabled web agent (using Capybara)" do |para
 
     it 'stubs google.com' do
       page.driver.add_headers("User-Agent" => "the user agent string you want")
+      visit "http://www.google.com/"
+      expect(page).to have_content('test response')
+      page.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      expect(page).to have_content('the user agent string you want')
+    end
+  end
+
+  context "puffing billy chrome exploratory test", type: :feature,
+          driver: :selenium_chrome_billy do
+    before :all do
+      proxy.stub('http://www.google.com/')
+          .and_return(:text => "test response")
+    end
+
+    it 'stubs google.com' do
+      page.driver.header("User-Agent" => "the user agent string you want")
       visit "http://www.google.com/"
       expect(page).to have_content('test response')
       page.execute_script(

@@ -182,40 +182,6 @@ RSpec.describe Scraypa do
             Scraypa.visit method: :get, url: "http://example.com"
           end
         end
-
-        context "puffing billy poltergeist exploratory test", type: :feature,
-                 driver: :poltergeist_billy do
-          before :all do
-            proxy.stub('http://www.google.com/')
-                .and_return(:text => "test response")
-          end
-
-          it 'stubs google.com' do
-            page.driver.add_headers("User-Agent" => "the user agent string you want")
-            visit "http://www.google.com/"
-            expect(page).to have_content('test response')
-            page.execute_script(
-                "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-            expect(page).to have_content('the user agent string you want')
-          end
-        end
-
-        context "puffing billy chrome exploratory test", type: :feature,
-                driver: :selenium_chrome_billy do
-          before :all do
-            proxy.stub('http://www.google.com/')
-                .and_return(:text => "test response")
-          end
-
-          it 'stubs google.com' do
-            page.driver.header("User-Agent" => "the user agent string you want")
-            visit "http://www.google.com/"
-            expect(page).to have_content('test response')
-            page.execute_script(
-                "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-            expect(page).to have_content('the user agent string you want')
-          end
-        end
       end
     end
   end

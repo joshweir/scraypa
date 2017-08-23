@@ -45,11 +45,14 @@ RSpec.describe Scraypa do
       end
 
       it_behaves_like 'a Tor-able web agent'
+
+      it_behaves_like 'a user agent customizer'
     end
 
     context "when using Capybara (using javascript)" do
       describe "with headless_chromium driver" do
         it_behaves_like 'a javascript-enabled web agent (using Capybara)',
+                        use_capybara: true,
                         driver: :headless_chromium
 
         #it_behaves_like 'a Tor-able web agent',
@@ -76,6 +79,10 @@ RSpec.describe Scraypa do
               }
             end
           }.to raise_error /headless_chromium does not support Tor/
+
+          it_behaves_like 'a user agent customizer',
+                          use_capybara: true,
+                          driver: :headless_chromium
         end
       end
 
@@ -84,6 +91,10 @@ RSpec.describe Scraypa do
                         driver: :poltergeist
 
         it_behaves_like 'a Tor-able web agent',
+                        use_capybara: true,
+                        driver: :poltergeist
+
+        it_behaves_like 'a user agent customizer',
                         use_capybara: true,
                         driver: :poltergeist
       end
