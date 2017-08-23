@@ -1,56 +1,40 @@
 RSpec.shared_examples "a user agent customizer" do |params|
-  before :all do
-    Scraypa.reset
-    Scraypa.configure do |config|
-      config.use_capybara = true
-      config.driver = params[:driver]
-      if params[:driver] == :poltergeist
-        config.driver_options = {
-            :phantomjs => Phantomjs.path,
-            :js_errors => false,
-            :phantomjs_options => ["--web-security=true"]
-        }
-      elsif params[:driver] == :headless_chromium
-        config.driver_options = {
-            browser: :chrome,
-            desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-                "chromeOptions" => {
-                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
-                    'args' => ["headless", "no-sandbox", "disable-gpu",
-                               "window-size=1092,1080"]
-                }
-            )
-        }
-      else
-        raise "invalid params[:driver]: #{params[:driver]}"
+  context "verify that the agent can customize the user agent" do
+    it "can customize the user agent"
+  end
+
+  context "when using the :common_aliases :user_agents option" do
+    context "with the :randomize :strategy" do
+      it "uses a user agent from the :common_aliases list" do
+        configure_scraypa(
+            params.merge({
+                             user_agent: {
+                                 user_agents: :common_aliases,
+                                 strategy: :randomize
+                             }
+                         }))
       end
     end
-    @response = Scraypa.visit(:url => "http://bot.whatismyipaddress.com")
+
+    context "with the :round_robin :strategy" do
+      it "uses a user agent from the :common_aliases list"
+    end
   end
 
-  it "utilises capybara to download web content" do
-    expect(@response.class).to eq(Capybara::Session)
-    expect(@response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
-    expect(@response.status_code).to eq(200) if
-        @response.methods.include?('status_code')
+  context "when using the :randomizer :user_agents option" do
+    it "uses a user agent from the :common_aliases list"
   end
 
-  it "is able to execute javascript" do
-    @response.execute_script(
-        "document.getElementsByTagName('body')[0].innerHTML = 'changed';")
-    expect(@response).to have_content('changed')
+  context "when passing a list of user defined :user_agents" do
+    context "with the :randomize :strategy" do
+      it "uses a user agent from the :common_aliases list"
+    end
+
+    context "with the :round_robin :strategy" do
+      it "uses a user agent from the :common_aliases list"
+    end
   end
 
-  it "is able to act like a Capybara session" do
-    response = Scraypa.visit(:url => "http://unixpapa.com/js/testmouse.html")
-    expect(response.find("textarea").value).to eq ""
-    response.click_link "click here to test"
-    expect(response.find("textarea").value).to_not eq ""
-    response.click_link "click here to clear"
-    expect(response.find("textarea").value).to eq ""
-    response.click_link("IE attachEvent")
-    expect(response.current_path).to eq "/js/testmouse-ie.html"
-  end
 
   context "when customizing the user agent", type: :feature,
           driver: :poltergeist_billy do
@@ -83,6 +67,35 @@ RSpec.shared_examples "a user agent customizer" do |params|
       page.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
       expect(page).to have_content('the user agent string you want')
+    end
+  end
+
+  def configure_scraypa params
+    Scraypa.reset
+    Scraypa.configure do |config|
+      config.user_agent = params[:user_agent] if params[:user_agent]
+      config.use_capybara = true if params[:use_capybara]
+      config.driver = params[:driver] if params[:driver]
+      if params[:driver] == :poltergeist
+        config.driver_options = {
+            :phantomjs => Phantomjs.path,
+            :js_errors => false,
+            :phantomjs_options => ["--web-security=true"]
+        }
+      elsif params[:driver] == :headless_chromium
+        config.driver_options = {
+            browser: :chrome,
+            desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+                "chromeOptions" => {
+                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                    'args' => ["headless", "no-sandbox", "disable-gpu",
+                               "window-size=1092,1080"]
+                }
+            )
+        }
+      else
+        raise "invalid params[:driver]: #{params[:driver]}"
+      end
     end
   end
 end
