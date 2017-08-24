@@ -92,5 +92,33 @@ module Scraypa
         expect(config.eye_tor_config_template).to eq '/my/path/to.eye.config.rb'
       end
     end
+
+    describe "#throttle_seconds" do
+      it "should have a default value of nil" do
+        expect(Configuration.new.throttle_seconds).to be_nil
+      end
+    end
+
+    describe "#throttle_seconds=" do
+      it "can set value" do
+        config = Configuration.new
+        config.throttle_seconds = 1.5
+        expect(config.throttle_seconds).to eq 1.5
+      end
+    end
+
+    describe "#user_agent" do
+      it "should have a default value of nil" do
+        expect(Configuration.new.user_agent).to be_nil
+      end
+    end
+
+    describe "#user_agent=" do
+      it "can set value" do
+        config = Configuration.new
+        config.user_agent = 'test'
+        expect(config.user_agent).to eq 'test'
+      end
+    end
   end
 end

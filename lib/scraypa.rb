@@ -16,7 +16,8 @@ module Scraypa
   TorNotSupportedByAgent = Class.new(StandardError)
 
   class << self
-    attr_accessor :agent, :tor_process, :tor_ip_control, :tor_proxy
+    attr_accessor :agent, :tor_process, :tor_ip_control, :tor_proxy,
+                  :throttle, :user_agent
 
     def configuration
       @configuration ||= Configuration.new
@@ -28,20 +29,21 @@ module Scraypa
 
     def reset
       @configuration = Configuration.new
-      setup_agent
+      reset_throttle
+      setup_scraypa
       @configuration
     end
 
     def configure
       yield(configuration).tap{
         validate_configuration
-        setup_agent
+        setup_scraypa
       }
     end
 
     def visit params={}
-      setup_agent unless @agent
-      @agent.execute(params)
+      setup_scraypa unless @agent
+      visit_with_throttle params
     end
 
     def change_tor_ip_address
@@ -60,9 +62,15 @@ module Scraypa
           using_tor? && @configuration.driver == :headless_chromium
     end
 
-    def setup_agent
+    def setup_scraypa
+      setup_tor
+      setup_agent
+      setup_throttle
+      setup_user_agent
+    end
+
+    def setup_tor
       ensure_tor_options_are_configured
-      @agent = Scraypa::VisitFactory.build(@configuration)
       using_tor? && !tor_running_in_current_process? ?
           reset_tor :
           (!using_tor? && tor_running_in_current_process? ?
@@ -112,6 +120,36 @@ module Scraypa
       @tor_ip_control = nil
       @tor_proxy = nil
       @tor_process = nil
+    end
+
+    def setup_agent
+      @agent = Scraypa::VisitFactory.build(@configuration)
+    end
+
+    def setup_throttle
+      @throttle = Throttle.new seconds: @configuration.throttle_seconds if
+          throttle_config_has_changed?
+    end
+
+    def throttle_config_has_changed?
+      @configuration.throttle_seconds &&
+          (@configuration.throttle_seconds.is_a?(Hash) ||
+              @configuration.throttle_seconds > 0) &&
+          (!@throttle || @throttle.seconds != @configuration.throttle_seconds)
+    end
+
+    def visit_with_throttle params
+      @throttle.throttle if @throttle
+      @agent.execute(params)
+      @throttle.last_request_time = Time.now if @throttle
+    end
+
+    def reset_throttle
+      @throttle.last_request_time = nil if @throttle
+    end
+
+    def setup_user_agent
+
     end
   end
 end

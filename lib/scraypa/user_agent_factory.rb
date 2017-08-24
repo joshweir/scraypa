@@ -1,5 +1,5 @@
 require 'rest-client'
-
+=begin
 module Scraypa
   class VisitRestClient < VisitInterface
     def initialize *args
@@ -26,3 +26,4 @@ module Scraypa
     end
   end
 end
+=end

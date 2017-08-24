@@ -1,3 +1,4 @@
+=begin
 module Scraypa
   class VisitInterface
     def initialize(*args)
@@ -11,3 +12,4 @@ module Scraypa
     end
   end
 end
+=end

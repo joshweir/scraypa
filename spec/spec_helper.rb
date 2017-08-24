@@ -8,6 +8,9 @@ require 'socket'
 Dir.glob(File.join(File.expand_path('../..', __FILE__),
                    "spec/scraypa/shared_examples/**/*.rb"))
     .each {|f| require f}
+Dir.glob(File.join(File.expand_path('../..', __FILE__),
+                   "spec/custom/**/*.rb"))
+    .each {|f| require f}
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

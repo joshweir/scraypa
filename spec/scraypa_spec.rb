@@ -184,5 +184,44 @@ RSpec.describe Scraypa do
         end
       end
     end
+
+    context "when :throttle_seconds is configured with a single value" do
+      it "throttles between requests" do
+        Scraypa.reset
+        Scraypa.configure {|c| c.throttle_seconds = 0.5}
+        expect(RestClient::Request)
+            .to receive(:execute)
+                    .with(method: :get,
+                          url: "http://example.com").twice
+        expect(Scraypa.throttle).to receive(:sleep).with(value_between(0.1, 0.5)).once
+        Scraypa.visit method: :get, url: "http://example.com"
+        Scraypa.visit method: :get, url: "http://example.com"
+      end
+    end
+
+    context "when :throttle_seconds is configured with a hash range" do
+      it "throttles between requests randomly between the range" do
+        Scraypa.reset
+        Scraypa.configure {|c| c.throttle_seconds = {from: 0.5, to: 2.5}}
+        expect(RestClient::Request)
+            .to receive(:execute)
+                    .with(method: :get,
+                          url: "http://example.com").twice
+        expect(Scraypa.throttle).to receive(:sleep).with(value_between(0.5, 2.5)).once
+        Scraypa.visit method: :get, url: "http://example.com"
+        Scraypa.visit method: :get, url: "http://example.com"
+      end
+    end
+
+    context "when :throttle_seconds configuration is changed" do
+      it "changes the throttle accordingly" do
+        Scraypa.reset
+        Scraypa.configure {|c| c.throttle_seconds = 0.5}
+        expect(Scraypa.throttle.seconds).to eq 0.5
+        throttle_range = {from: 0.5, to: 2.5}
+        Scraypa.configure {|c| c.throttle_seconds = throttle_range}
+        expect(Scraypa.throttle.seconds).to eq throttle_range
+      end
+    end
   end
 end

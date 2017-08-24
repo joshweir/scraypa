@@ -1,3 +1,4 @@
+=begin
 require 'rest-client'
 
 module Scraypa
@@ -26,3 +27,4 @@ module Scraypa
     end
   end
 end
+=end

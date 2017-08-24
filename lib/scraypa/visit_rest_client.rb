@@ -8,7 +8,7 @@ module Scraypa
     end
 
     def execute params={}
-      Scraypa.tor_proxy ?
+      @config.tor && Scraypa.tor_proxy ?
         visit_get_response_through_tor(params) :
         visit_get_response(params)
     end
