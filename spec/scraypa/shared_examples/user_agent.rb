@@ -1,6 +1,6 @@
 RSpec.shared_examples "a user agent customizer" do |params|
   if params && params[:driver] == :poltergeist
-    context "when customizing the user agent with :poltergeist", type: :feature,
+    context "verify that :poltergeist can customize the user agent", type: :feature,
             driver: :poltergeist_billy do
       before :all do
         proxy.stub('http://www.google.com/')
@@ -21,7 +21,7 @@ RSpec.shared_examples "a user agent customizer" do |params|
     #unfortunately cannot proxy headless_chromium through puffing billy
     #as need to modify the user agent which is not available with
     #:selenium_chrome_billy
-    context "when customizing the user agent with :headless_chromium" do
+    context "verify that :headless_chromium can customize the user agent" do
       it 'uses the customized user agent' do
         configure_scraypa params
         #Capybara.page.driver.header("User-Agent" => "the user agent string you want")
@@ -33,12 +33,25 @@ RSpec.shared_examples "a user agent customizer" do |params|
       end
     end
   else
+    context "verify that RestClient can customize the user agent" do
+      before :all do
+        Scraypa.reset
+        stub_request(:get, "http://my.mock.site/page2.html").
+            with(headers: {'Accept'=>'*/*',
+                           'Accept-Encoding'=>'gzip, deflate',
+                           'Host'=>'my.mock.site',
+                           'User-Agent'=>'my other user agent'}).
+            to_return(status: 200, body: "test response", headers: {})
+      end
 
-  end
-
-  context "verify that the agent can customize the user agent" do
-    it "can customize the user agent" do
-
+      it "uses the customized user agent" do
+        response = Scraypa.visit(:method => :get,
+                                  :url => "http://my.mock.site/page2.html",
+                                  :timeout => 3, :open_timeout => 3,
+                                  :headers => {:user_agent => 'my other user agent'})
+        expect(response.class).to eq(RestClient::Response)
+        expect(response.to_str).to eq('test response')
+      end
     end
   end
 
