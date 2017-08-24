@@ -9,6 +9,7 @@ require "scraypa/user_agent_user_defined"
 require "scraypa/user_agent_common_aliases"
 require "scraypa/user_agent_random"
 require "scraypa/user_agent_factory"
+require "scraypa/throttle"
 require 'tormanager'
 
 module Scraypa

@@ -1,19 +1,26 @@
-RSpec.shared_examples "a user agent customizer" do |params|
-  if params && params[:driver] == :poltergeist
-    it_behaves_like "a user agent customizer (using :poltergeist)", params
-  elsif params && params[:driver] == :headless_chromium
-    it_behaves_like "a user agent customizer (using :headless_chromium)", params
-  else
-    it_behaves_like "a user agent customizer (using RestClient)", params
+RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |params|
+  #unfortunately cannot proxy headless_chromium through puffing billy
+  #as need to modify the user agent which is not available with
+  #:selenium_chrome_billy
+  context "verify that :headless_chromium can customize the user agent" do
+    it 'uses the customized user agent' do
+      configure_scraypa params
+      #Capybara.page.driver.header("User-Agent" => "the user agent string you want")
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      expect(response).to have_content('the user agent string you want')
+    end
   end
-=begin
+
   context "when using the :common_aliases :user_agents option" do
     before :all do
 
     end
 
     it "uses a user agent list of :common_aliases and changes user agent " +
-       "every :change_after_n_requests requests" do
+           "every :change_after_n_requests requests" do
       Scraypa.reset
       configure_scraypa(
           params.merge({
@@ -43,7 +50,7 @@ RSpec.shared_examples "a user agent customizer" do |params|
       it "uses a user agent from the :common_aliases list in order that is linear"
     end
   end
-=end
+
   context "when using the :randomizer :user_agents option" do
     it "uses a user agent from the user agents randomizer list"
   end
@@ -57,23 +64,4 @@ RSpec.shared_examples "a user agent customizer" do |params|
       it "uses a user agent from the :common_aliases list in order that is linear"
     end
   end
-
-=begin
-  context "when customizing the user agent with :poltergeist", type: :feature,
-          driver: :poltergeist_billy do
-    before :all do
-      proxy.stub('http://www.google.com/')
-          .and_return(:text => "test response")
-    end
-
-    it 'uses the customized user agent' do
-      page.driver.add_headers("User-Agent" => "the user agent string you want")
-      visit "http://www.google.com/"
-      expect(page).to have_content('test response')
-      page.execute_script(
-          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      expect(page).to have_content('the user agent string you want')
-    end
-  end
-=end
 end

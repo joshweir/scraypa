@@ -1,19 +1,32 @@
-RSpec.shared_examples "a user agent customizer" do |params|
-  if params && params[:driver] == :poltergeist
-    it_behaves_like "a user agent customizer (using :poltergeist)", params
-  elsif params && params[:driver] == :headless_chromium
-    it_behaves_like "a user agent customizer (using :headless_chromium)", params
-  else
-    it_behaves_like "a user agent customizer (using RestClient)", params
+RSpec.shared_examples "a user agent customizer (using RestClient)" do |params|
+  context "verify that RestClient can customize the user agent" do
+    before :all do
+      Scraypa.reset
+      stub_request(:get, "http://my.mock.site/page2.html").
+          with(headers: {'Accept'=>'*/*',
+                         'Accept-Encoding'=>'gzip, deflate',
+                         'Host'=>'my.mock.site',
+                         'User-Agent'=>'my other user agent'}).
+          to_return(status: 200, body: "test response", headers: {})
+    end
+
+    it "uses the customized user agent" do
+      response = Scraypa.visit(:method => :get,
+                               :url => "http://my.mock.site/page2.html",
+                               :timeout => 3, :open_timeout => 3,
+                               :headers => {:user_agent => 'my other user agent'})
+      expect(response.class).to eq(RestClient::Response)
+      expect(response.to_str).to eq('test response')
+    end
   end
-=begin
+
   context "when using the :common_aliases :user_agents option" do
     before :all do
 
     end
 
     it "uses a user agent list of :common_aliases and changes user agent " +
-       "every :change_after_n_requests requests" do
+           "every :change_after_n_requests requests" do
       Scraypa.reset
       configure_scraypa(
           params.merge({
@@ -43,7 +56,7 @@ RSpec.shared_examples "a user agent customizer" do |params|
       it "uses a user agent from the :common_aliases list in order that is linear"
     end
   end
-=end
+
   context "when using the :randomizer :user_agents option" do
     it "uses a user agent from the user agents randomizer list"
   end
@@ -57,23 +70,4 @@ RSpec.shared_examples "a user agent customizer" do |params|
       it "uses a user agent from the :common_aliases list in order that is linear"
     end
   end
-
-=begin
-  context "when customizing the user agent with :poltergeist", type: :feature,
-          driver: :poltergeist_billy do
-    before :all do
-      proxy.stub('http://www.google.com/')
-          .and_return(:text => "test response")
-    end
-
-    it 'uses the customized user agent' do
-      page.driver.add_headers("User-Agent" => "the user agent string you want")
-      visit "http://www.google.com/"
-      expect(page).to have_content('test response')
-      page.execute_script(
-          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      expect(page).to have_content('the user agent string you want')
-    end
-  end
-=end
 end

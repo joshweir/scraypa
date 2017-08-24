@@ -62,4 +62,34 @@ RSpec.configure do |config|
     expect(new_tor_process).to receive(:start)
     [new_tor_process, new_tor_proxy, new_tor_ip_control]
   end
+
+  def configure_scraypa params
+    Scraypa.reset
+    Scraypa.configure do |config|
+      config.throttle_seconds = 0.5
+      config.user_agent = params[:user_agent] if params[:user_agent]
+      config.use_capybara = true if params[:use_capybara]
+      config.driver = params[:driver] if params[:driver]
+      if [:poltergeist, :poltergeist_billy].include? params[:driver]
+        config.driver_options = {
+            :phantomjs => Phantomjs.path,
+            :js_errors => false,
+            :phantomjs_options => ["--web-security=true"]
+        }
+      elsif [:headless_chromium, :selenium_chrome_billy].include? params[:driver]
+        config.driver_options = {
+            browser: :chrome,
+            desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+                "chromeOptions" => {
+                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                    'args' => ["headless", "no-sandbox", "disable-gpu",
+                               "window-size=1092,1080"]
+                }
+            )
+        }
+      else
+        raise "invalid params[:driver]: #{params[:driver]}"
+      end
+    end
+  end
 end
