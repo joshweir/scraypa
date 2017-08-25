@@ -1,5 +1,5 @@
 module Scraypa
-  UnrecognisedUserAgents = Class.new(StandardError)
+  UnrecognisedUserAgentsMethod = Class.new(StandardError)
 
   class UserAgentFactory
     def self.build(*args)
@@ -10,14 +10,13 @@ module Scraypa
       #}
 
       case args[0] && args[0][:user_agents]
-      when :common_aliases
-        UserAgentCommonAliases.new(*args)
+      when :common_aliases, String, Array
+        UserAgentIterator.new(*args)
       when :randomizer
         UserAgentRandom.new(*args)
-      when String, Array
-        UserAgentUserDefined.new(*args)
       else
-        raise UnrecognisedUserAgents
+        raise UnrecognisedUserAgentsMethod,
+              "User agent not recognized"
       end
     end
   end
