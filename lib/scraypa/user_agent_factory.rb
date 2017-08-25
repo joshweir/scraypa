@@ -1,29 +1,24 @@
-require 'rest-client'
-=begin
 module Scraypa
-  class VisitRestClient < VisitInterface
-    def initialize *args
-      super(*args)
-      @config = args[0]
-    end
+  UnrecognisedUserAgents = Class.new(StandardError)
 
-    def execute params={}
-      Scraypa.tor_proxy ?
-        visit_get_response_through_tor(params) :
-        visit_get_response(params)
-    end
+  class UserAgentFactory
+    def self.build(*args)
+      #{
+      #    user_agents: :common_aliases,
+      #    strategy: :randomize,
+      #    change_after_n_requests: 2
+      #}
 
-    private
-
-    def visit_get_response_through_tor params={}
-      Scraypa.tor_proxy.proxy do
-        return visit_get_response params
+      case args[0] && args[0][:user_agents]
+      when :common_aliases
+        UserAgentCommonAliases.new(*args)
+      when :randomizer
+        UserAgentRandom.new(*args)
+      when String, Array
+        UserAgentUserDefined.new(*args)
+      else
+        raise UnrecognisedUserAgents
       end
-    end
-
-    def visit_get_response params={}
-      RestClient::Request.execute params
     end
   end
 end
-=end

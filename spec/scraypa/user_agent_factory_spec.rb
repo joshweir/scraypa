@@ -1,96 +1,47 @@
 require "spec_helper"
 
 module Scraypa
-  describe Configuration do
-    describe "#use_capybara" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.use_capybara).to be_nil
+  describe UserAgentFactory do
+    describe ".build" do
+      context "when user_agents: :common_aliases" do
+        it "instantiates a UserAgentCommonAliases object passing the params" do
+          expect(UserAgentCommonAliases)
+              .to receive(:new)
+                      .with(user_agents: :common_aliases,
+                            change_after_n_requests: 2)
+          UserAgentFactory.build(user_agents: :common_aliases,
+                                 change_after_n_requests: 2)
+        end
       end
-    end
 
-    describe "#use_capybara=" do
-      it "can set value" do
-        config = Configuration.new
-        config.use_capybara = true
-        expect(config.use_capybara).to be_truthy
+      context "when user_agents: :randomizer" do
+        it "instantiates a UserAgentRandom object passing the params"
       end
-    end
 
-    describe "#driver" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.driver).to be_nil
+      context "when :user_agents param is a String" do
+        it "instantiates a UserAgentUserDefined object passing the params"
       end
-    end
 
-    describe "#driver=" do
-      it "can set value" do
-        config = Configuration.new
-        config.driver = :poltergeist
-        expect(config.driver).to eq(:poltergeist)
+      context "when :user_agents param is an Array" do
+        it "instantiates a UserAgentUserDefined object passing the params"
       end
-    end
 
-    describe "#driver_options" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.driver_options).to be_nil
-      end
-    end
-
-    describe "#driver_options=" do
-      it "can set value" do
-        config = Configuration.new
-        the_options = {
-            :js_errors => false
-        }
-        config.driver_options = the_options
-        expect(config.driver_options).to eq(the_options)
-      end
-    end
-
-    describe "#tor" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.tor).to be_nil
-      end
-    end
-
-    describe "#tor=" do
-      it "can set value" do
-        config = Configuration.new
-        config.tor = true
-        expect(config.tor).to be_truthy
-      end
-    end
-
-    describe "#tor_options" do
-      it "should have a default value" do
-        expect(Configuration.new.tor_options).to be_nil
-      end
-    end
-
-    describe "#tor_options=" do
-      it "can set value" do
-        config = Configuration.new
-        the_options = {
-            tor_port: 9150,
-            control_port: 51500
-        }
-        config.tor_options = the_options
-        expect(config.tor_options).to eq(the_options)
-      end
-    end
-
-    describe "#eye_tor_config_template" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.eye_tor_config_template).to be_nil
-      end
-    end
-
-    describe "#eye_tor_config_template=" do
-      it "can set value" do
-        config = Configuration.new
-        config.eye_tor_config_template = '/my/path/to.eye.config.rb'
-        expect(config.eye_tor_config_template).to eq '/my/path/to.eye.config.rb'
+      context "when :user_agents is not recognized" do
+        it "raises UnrecognisedUserAgents exception"
       end
     end
   end
 end
+
+=begin
+case args[0] && args[0][:user_agents]
+  when :common_aliases
+    UserAgentCommonAliases.new(*args)
+  when :randomizer
+    UserAgentRandom.new(*args)
+  when String, Array
+    UserAgentUserDefined.new(*args)
+  else
+    raise UnrecognisedUserAgents
+end
+=end

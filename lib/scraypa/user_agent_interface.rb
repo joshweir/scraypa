@@ -1,15 +1,11 @@
-=begin
 module Scraypa
-  class VisitInterface
+  class UserAgentInterface
     def initialize(*args)
-      raise "Scraypa::Configuration object required by Visit interface. " +
-                "Got: #{args[0].class}" unless
-          args[0].is_a?(Scraypa::Configuration)
+
     end
 
-    def execute
-      raise NotImplementedError, 'execute action not implemented.'
+    def user_agent
+      raise NotImplementedError, 'user_agent action not implemented.'
     end
   end
 end
-=end
