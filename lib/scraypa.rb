@@ -17,7 +17,7 @@ module Scraypa
 
   class << self
     attr_accessor :agent, :tor_process, :tor_ip_control, :tor_proxy,
-                  :throttle, :user_agent
+                  :throttle, :user_agent_retriever
 
     def configuration
       @configuration ||= Configuration.new
@@ -50,6 +50,11 @@ module Scraypa
       @tor_ip_control.get_new_ip if using_tor?
     end
 
+    def user_agent
+      @user_agent_retriever ?
+          @user_agent_retriever.current_user_agent : nil
+    end
+
     private
 
     def validate_configuration
@@ -63,10 +68,10 @@ module Scraypa
     end
 
     def setup_scraypa
+      setup_user_agent
       setup_tor
       setup_agent
       setup_throttle
-      setup_user_agent
     end
 
     def setup_tor
@@ -108,7 +113,8 @@ module Scraypa
 
     def initialize_tor params={}
       @tor_process = TorManager::TorProcess.new params || {}
-      @tor_proxy = TorManager::Proxy.new tor_process: @tor_process
+      @tor_proxy = @configuration.tor_proxy =
+          TorManager::Proxy.new tor_process: @tor_process
       @tor_ip_control = TorManager::IpAddressControl.new(
           tor_process: @tor_process, tor_proxy: @tor_proxy)
       @tor_process.start
@@ -118,7 +124,7 @@ module Scraypa
       @tor_process.stop if @tor_process
       TorManager::TorProcess.stop_obsolete_processes
       @tor_ip_control = nil
-      @tor_proxy = nil
+      @tor_proxy = @configuration.tor_proxy = nil
       @tor_process = nil
     end
 
@@ -140,8 +146,9 @@ module Scraypa
 
     def visit_with_throttle params
       @throttle.throttle if @throttle
-      @agent.execute(params)
+      response = @agent.execute(params)
       @throttle.last_request_time = Time.now if @throttle
+      response
     end
 
     def reset_throttle
@@ -149,7 +156,9 @@ module Scraypa
     end
 
     def setup_user_agent
-
+      @user_agent_retriever = @configuration.user_agent_retriever =
+        @configuration.user_agent ?
+            UserAgentFactory.build(@configuration.user_agent) : nil
     end
   end
 end

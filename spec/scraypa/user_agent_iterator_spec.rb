@@ -64,6 +64,13 @@ module Scraypa
           #only user agents from our list are used
           expect((attempts.uniq - ['agent1', 'agent2', 'agent3']).empty?).to be_truthy
         end
+
+        it "will just select the only user agent if there is just one" do
+          attempts = []
+          2.times { attempts << UserAgentIterator.new(list: 'agent1',
+                                                      strategy: :randomize).user_agent }
+          expect(attempts).to eq ['agent1','agent1']
+        end
       end
     end
 

@@ -2,6 +2,8 @@ require 'useragents'
 
 module Scraypa
   class UserAgentRandom < UserAgentAbstract
+    attr_reader :current_user_agent
+
     def initialize *args
       super(*args)
       @config = args[0] || {}

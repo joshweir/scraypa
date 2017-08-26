@@ -1,5 +1,7 @@
 module Scraypa
   class UserAgentIterator < UserAgentAbstract
+    attr_reader :current_user_agent
+
     def initialize *args
       super(*args)
       @config = args[0] || {}
@@ -7,8 +9,8 @@ module Scraypa
       @reducing_list = @list.clone
       @strategy = @config.fetch(:strategy, :roundrobin)
       @change_after_n_requests = @config.fetch(:change_after_n_requests, 0)
-      @current_user_agent_requests = 0
       @current_user_agent = nil
+      @current_user_agent_requests = 0
     end
 
     def user_agent
@@ -55,6 +57,7 @@ module Scraypa
     end
 
     def ensure_a_new_random_user_agent
+      return @list.first if @list.length == 1
       random_user_agent = nil
       loop do
         random_user_agent = @list.sample

@@ -73,25 +73,29 @@ RSpec.configure do |config|
       config.user_agent = params[:user_agent] if params[:user_agent]
       config.use_capybara = true if params[:use_capybara]
       config.driver = params[:driver] if params[:driver]
-      if [:poltergeist, :poltergeist_billy].include? params[:driver]
-        config.driver_options = {
-            :phantomjs => Phantomjs.path,
-            :js_errors => false,
-            :phantomjs_options => ["--web-security=true"]
-        }
-      elsif [:headless_chromium, :selenium_chrome_billy].include? params[:driver]
-        config.driver_options = {
-            browser: :chrome,
-            desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-                "chromeOptions" => {
-                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
-                    'args' => ["headless", "no-sandbox", "disable-gpu",
-                               "window-size=1092,1080"]
-                }
-            )
-        }
+      if params[:driver_options]
+        config.driver_options = params[:driver_options]
       else
-        raise "invalid params[:driver]: #{params[:driver]}"
+        if [:poltergeist, :poltergeist_billy].include? params[:driver]
+          config.driver_options = {
+              :phantomjs => Phantomjs.path,
+              :js_errors => false,
+              :phantomjs_options => ["--web-security=true"]
+          }
+        elsif [:headless_chromium, :selenium_chrome_billy].include? params[:driver]
+          config.driver_options = {
+              browser: :chrome,
+              desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
+                  "chromeOptions" => {
+                      'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                      'args' => ["headless", "no-sandbox", "disable-gpu",
+                                 "window-size=1092,1080"]
+                  }
+              )
+          }
+        elsif params[:driver]
+          raise "invalid params[:driver]: #{params[:driver]}"
+        end
       end
     end
   end

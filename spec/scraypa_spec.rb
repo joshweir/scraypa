@@ -137,6 +137,23 @@ RSpec.describe Scraypa do
           Scraypa.visit method: :get, url: "http://example.com"
         end
       end
+
+      context "with user agent specified" do
+        it "utlises the user agent in the web request" do
+          Scraypa.reset
+          Scraypa.configure do |c|
+            c.user_agent = {
+                list: 'my user agent'
+            }
+          end
+          expect(RestClient::Request)
+              .to receive(:execute)
+                      .with(method: :get,
+                            url: "http://example.com",
+                            headers: {user_agent: 'my user agent'})
+          Scraypa.visit method: :get, url: "http://example.com"
+        end
+      end
     end
 
     context "when using Capybara (using javascript)" do
@@ -147,6 +164,7 @@ RSpec.describe Scraypa do
             c.use_capybara = true
             c.driver = :headless_chromium
             c.tor = nil
+            c.user_agent = nil
           end
           expect(Capybara)
               .to receive(:visit).with("http://example.com")
@@ -161,6 +179,7 @@ RSpec.describe Scraypa do
             c.use_capybara = true
             c.driver = :poltergeist
             c.tor = nil
+            c.user_agent = nil
           end
           expect(Capybara)
               .to receive(:visit).with("http://example.com")
@@ -179,6 +198,27 @@ RSpec.describe Scraypa do
             expect(tor_proxy).to receive(:proxy).and_yield
             expect(Capybara)
                 .to receive(:visit).with("http://example.com")
+            Scraypa.visit method: :get, url: "http://example.com"
+          end
+        end
+
+        context "with user agent specified" do
+          it "utlises the user agent in the web request" do
+            Scraypa.reset
+            Scraypa.configure do |c|
+              c.use_capybara = true
+              c.driver = :poltergeist
+              c.tor = nil
+              c.user_agent = {
+                  list: 'my user agent'
+              }
+            end
+            expect(Capybara)
+                .to receive(:visit)
+                        .with("http://example.com")
+            expect(Capybara.page.driver)
+                .to receive(:add_headers)
+                        .with("User-Agent" => "my user agent")
             Scraypa.visit method: :get, url: "http://example.com"
           end
         end

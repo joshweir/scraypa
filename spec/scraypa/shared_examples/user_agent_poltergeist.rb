@@ -17,14 +17,14 @@ RSpec.shared_examples "a user agent customizer (using :poltergeist)" do |params|
     end
   end
 
-  context "when using the :common_aliases :user_agents option", type: :feature,
+  context "when using defaults with no :list (no :method specified)", type: :feature,
           driver: :poltergeist_billy do
     before :all do
       proxy.stub('http://example.com/')
           .and_return(:text => "test response")
     end
 
-    it "uses a user agent list of :common_aliases and changes user agent " +
+    it "uses a common user agent list changes user agent " +
        "every :change_after_n_requests requests" do
       expect_common_aliases_and_changes_after_n_requests params
     end
