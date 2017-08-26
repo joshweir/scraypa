@@ -1,95 +1,48 @@
 require "spec_helper"
 
 module Scraypa
-  describe Configuration do
-    describe "#use_capybara" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.use_capybara).to be_nil
-      end
+  describe UserAgentRandom do
+    it "can be instantiated" do
+      expect(subject).to be_an_instance_of UserAgentRandom
+      expect(subject.kind_of?(UserAgentAbstract)).to be_truthy
     end
 
-    describe "#use_capybara=" do
-      it "can set value" do
-        config = Configuration.new
-        config.use_capybara = true
-        expect(config.use_capybara).to be_truthy
-      end
-    end
-
-    describe "#driver" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.driver).to be_nil
-      end
-    end
-
-    describe "#driver=" do
-      it "can set value" do
-        config = Configuration.new
-        config.driver = :poltergeist
-        expect(config.driver).to eq(:poltergeist)
-      end
-    end
-
-    describe "#driver_options" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.driver_options).to be_nil
-      end
-    end
-
-    describe "#driver_options=" do
-      it "can set value" do
-        config = Configuration.new
-        the_options = {
-            :js_errors => false
+    describe "#user_agent" do
+      it "uses the UserAgent gem to randomize user agents" do
+        attempts = []
+        4.times {|i|
+          attempts << subject.user_agent
+          expect(attempts[i].length).to be > 0
         }
-        config.driver_options = the_options
-        expect(config.driver_options).to eq(the_options)
+        expect(attempts.uniq.length).to eq attempts.length
+      end
+
+      context "when :change_after_n_requests param is populated" do
+        let(:subject) { UserAgentRandom.new change_after_n_requests: 2 }
+        it "changes the user_agent after n requests" do
+          attempts = []
+          4.times { attempts << subject.user_agent }
+          expect(attempts[0]).to eq attempts[1]
+          expect(attempts[1]).to_not eq attempts[2]
+          expect(attempts[2]).to eq attempts[3]
+        end
+      end
+
+      context "when :change_after_n_requests param is empty" do
+        it "changes the user_agent every request" do
+          attempts = []
+          4.times {|i|
+            attempts << subject.user_agent
+            expect(attempts[i].length).to be > 0
+          }
+          expect(attempts.uniq.length).to eq attempts.length
+        end
       end
     end
 
-    describe "#tor" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.tor).to be_nil
-      end
-    end
-
-    describe "#tor=" do
-      it "can set value" do
-        config = Configuration.new
-        config.tor = true
-        expect(config.tor).to be_truthy
-      end
-    end
-
-    describe "#tor_options" do
-      it "should have a default value" do
-        expect(Configuration.new.tor_options).to be_nil
-      end
-    end
-
-    describe "#tor_options=" do
-      it "can set value" do
-        config = Configuration.new
-        the_options = {
-            tor_port: 9150,
-            control_port: 51500
-        }
-        config.tor_options = the_options
-        expect(config.tor_options).to eq(the_options)
-      end
-    end
-
-    describe "#eye_tor_config_template" do
-      it "should have a default value of nil" do
-        expect(Configuration.new.eye_tor_config_template).to be_nil
-      end
-    end
-
-    describe "#eye_tor_config_template=" do
-      it "can set value" do
-        config = Configuration.new
-        config.eye_tor_config_template = '/my/path/to.eye.config.rb'
-        expect(config.eye_tor_config_template).to eq '/my/path/to.eye.config.rb'
+    describe "#list" do
+      it "returns raises NotImplementedError" do
+        expect{subject.list}.to raise_error NotImplementedError
       end
     end
   end

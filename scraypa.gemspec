@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-rspec"
   spec.add_dependency "activesupport"
   spec.add_dependency "rest-client"
-  spec.add_dependency "useragents"
+  spec.add_dependency "useragents", "0.1.4"
   spec.add_dependency "capybara", "~> 2.4.4"
   spec.add_dependency "chromedriver-helper"
   spec.add_dependency "tormanager"
