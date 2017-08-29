@@ -10,10 +10,6 @@ module Scraypa
       else
         VisitRestClient.new(*args)
       end
-
-      args[0] && args[0].use_capybara ?
-         :
-
     end
   end
 end

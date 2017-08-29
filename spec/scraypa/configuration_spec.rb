@@ -120,5 +120,19 @@ module Scraypa
         expect(config.user_agent).to eq 'test'
       end
     end
+
+    describe "#headless_chromium" do
+      it "should have a default value of nil" do
+        expect(Configuration.new.headless_chromium).to be_nil
+      end
+    end
+
+    describe "#headless_chromium=" do
+      it "can set value" do
+        config = Configuration.new
+        config.headless_chromium = 'test'
+        expect(config.headless_chromium).to eq 'test'
+      end
+    end
   end
 end

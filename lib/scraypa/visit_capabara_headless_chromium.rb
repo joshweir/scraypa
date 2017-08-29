@@ -1,24 +1,27 @@
 require 'capybara'
-require 'capybara/poltergeist'
-require 'phantomjs'
 
 module Scraypa
   include Capybara::DSL
 
   CapybaraDriverUnsupported = Class.new(StandardError)
+  TooManyUserAgents = Class.new(StandardError)
+  HeadlessChromiumMissingConfig = Class.new(StandardError)
 
-  class VisitCapybara < VisitInterface
+  class VisitCapybaraHeadlessChromium < VisitInterface
     def initialize *args
       super(*args)
       @config = args[0]
       setup_driver
       @current_user_agent = nil
+      @user_agents = []
+      @user_agent_list_limit =
+          @config.headless_chromium[:user_agent_list_limit] || 30
     end
 
     def execute params={}
       @config.tor && @config.tor_proxy ?
-        visit_get_response_through_tor(params) :
-        visit_get_response(params)
+          visit_get_response_through_tor(params) :
+          visit_get_response(params)
     end
 
     private
@@ -39,45 +42,32 @@ module Scraypa
       if @config.user_agent_retriever
         new_user_agent = @config.user_agent_retriever.user_agent
         if @current_user_agent != new_user_agent
+          validate_user_agent_list_limit
           @current_user_agent = new_user_agent
-          update_user_agent_based_on_driver
+          @user_agents << @current_user_agent
+          setup_headless_chromium_driver
         end
+      else
+        @current_user_agent = nil
       end
     end
 
-    def update_user_agent_based_on_driver
-      case @config.driver
-        when :poltergeist, :poltergeist_billy
-          Capybara.page.driver.add_headers(
-              "User-Agent" => @current_user_agent)
-        when :headless_chromium
-          setup_headless_chromium_driver
-        else
-          raise CapybaraDriverUnsupported,
-                "Currently no support for capybara driver: #{@config.driver}"
-      end
+    def validate_user_agent_list_limit
+      raise TooManyUserAgents,
+            "Only #{@user_agent_list_limit} user agents can be " +
+                "used with #{@config.driver}" if
+          @user_agents.length >= @user_agent_list_limit
     end
 
     def setup_driver
       case @config.driver
-        when :poltergeist
-          setup_poltergeist_driver
         when :headless_chromium
           setup_headless_chromium_driver
-        when :poltergeist_billy, :selenium_chrome_billy
+        when :selenium_chrome_billy
           setup_billy_driver
         else
           raise CapybaraDriverUnsupported,
                 "Currently no support for capybara driver: #{@config.driver}"
-      end
-    end
-
-    def setup_poltergeist_driver
-      driver_name = (@config.driver.to_s +
-          (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : '')).to_sym
-      Capybara.default_driver = driver_name
-      Capybara.register_driver driver_name do |app|
-        Capybara::Poltergeist::Driver.new(app, @config.driver_options || {})
       end
     end
 
@@ -86,20 +76,9 @@ module Scraypa
     end
 
     def setup_headless_chromium_driver
-      driver_name = (@config.driver.to_s +
-          (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : '')).to_sym
-      driver_options = @config.driver_options || {}
-      #driver_options[:args] = [] unless driver_options.include?(:args)
-      #if @current_user_agent
-      #  driver_options[:args].delete_if {|d| d.include?("user-agent=")}
-      #  driver_options[:args] << "--user-agent=#{@current_user_agent}"
-      #end
-      #puts 'driver options!!!!!!!!!!'
-      #puts driver_options.inspect
+      #needs to do this:
 
-      needs to do this:
-
-      not just args, args needs to be inside the capabilities object
+      #not just args, args needs to be inside the capabilities object
       #desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
       #    "chromeOptions" => {
       #        'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
@@ -107,12 +86,62 @@ module Scraypa
       #                   "window-size=1092,1080"]
       #    }
       #)
+=begin
+  @config.driver_options looked like this:
 
+  {
+  browser: :chrome,
+  desired_capabilities: Selenium......
+    "chromeOptions" => {
+      'binary' =>
+      'args' =>
+    }
+  }
+  optionally:
+  args: ['args']
 
+change for headless chromium config no longer uses driver_options but uses:
+
+@config.headless_chromium[:browser]
+@config.headless_chromium[:chromeOptions]
+@config.headless_chromium[:args]
+
+=end
+      driver_name = (@config.driver.to_s +
+          (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : "") +
+          (@current_user_agent ?
+              "ua#{@user_agents.index(@current_user_agent)}" : "")).to_sym
       Capybara.default_driver = driver_name
       Capybara.register_driver driver_name do |app|
-        Capybara::Selenium::Driver.new(app, driver_options)
+        Capybara::Selenium::Driver.new(app, build_driver_options_from_config)
+      end unless registered_capybara_drivers.include?(driver_name)
+    end
+
+    def build_driver_options_from_config
+      driver_options = {browser: @config.headless_chromium[:browser] || :chrome}
+      driver_options[:desired_capabilities] =
+          Selenium::WebDriver::Remote::Capabilities.chrome(
+              "chromeOptions" =>
+                  merge_user_agent_with_chrome_options
+          ) if @config.headless_chromium[:chromeOptions]
+      driver_options[:args] = @config.headless_chromium[:args] if
+          @config.headless_chromium[:args]
+      driver_options
+    end
+
+    def merge_user_agent_with_chrome_options
+      chrome_options = @config.headless_chromium[:chromeOptions]
+      if @current_user_agent && chrome_options &&
+          (chrome_options[:args] || chrome_options['args'])
+        args_key = chrome_options[:args] ? :args : 'args'
+        chrome_options[args_key].delete_if {|d| d.include?("user-agent=")}
+        chrome_options[args_key] << "--user-agent=#{@current_user_agent}"
       end
+      chrome_options
+    end
+
+    def registered_capybara_drivers
+      Capybara.drivers.keys
     end
   end
 end

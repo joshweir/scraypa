@@ -2,7 +2,8 @@ module Scraypa
   class Configuration
     attr_accessor :use_capybara, :driver, :driver_options, :tor, :tor_options,
                   :tor_proxy, :user_agent_retriever, :user_agent,
-                  :eye_tor_config_template, :throttle_seconds
+                  :eye_tor_config_template, :throttle_seconds,
+                  :headless_chromium
 
     def initialize
       @use_capybara = nil
@@ -15,6 +16,7 @@ module Scraypa
       @driver_options = nil
       @eye_tor_config_template = nil
       @throttle_seconds = nil
+      @headless_chromium = nil
     end
   end
 end

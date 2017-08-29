@@ -75,6 +75,8 @@ RSpec.configure do |config|
       config.driver = params[:driver] if params[:driver]
       if params[:driver_options]
         config.driver_options = params[:driver_options]
+      elsif params[:headless_chromium]
+        config.headless_chromium = params[:headless_chromium]
       else
         if [:poltergeist, :poltergeist_billy].include? params[:driver]
           config.driver_options = {
@@ -83,15 +85,13 @@ RSpec.configure do |config|
               :phantomjs_options => ["--web-security=true"]
           }
         elsif [:headless_chromium, :selenium_chrome_billy].include? params[:driver]
-          config.driver_options = {
+          config.headless_chromium = {
               browser: :chrome,
-              desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-                  "chromeOptions" => {
-                      'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
-                      'args' => ["headless", "no-sandbox", "disable-gpu",
-                                 "window-size=1092,1080"]
-                  }
-              )
+              chromeOptions: {
+                  'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                  'args' => ["no-sandbox", "disable-gpu", "headless",
+                             "window-size=1092,1080"]
+              }
           }
         elsif params[:driver]
           raise "invalid params[:driver]: #{params[:driver]}"

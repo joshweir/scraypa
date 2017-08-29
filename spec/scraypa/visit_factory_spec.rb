@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Scraypa
-  describe UserAgentFactory do
+  describe VisitFactory do
     describe ".build" do
       context "when :method :randomizer" do
         let(:subject) { UserAgentFactory.build({method: :randomizer,

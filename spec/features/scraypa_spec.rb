@@ -85,6 +85,15 @@ RSpec.describe Scraypa do
         it_behaves_like 'a user agent customizer',
                         use_capybara: true,
                         driver: :headless_chromium,
+                        headless_chromium: {
+                            browser: :chrome,
+                            chromeOptions: {
+                                'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                                'args' => ["no-sandbox", "disable-gpu", "headless",
+                                           "window-size=1092,1080", "user-agent=test"]
+                            }
+                        }
+=begin
                         driver_options: {
                             browser: :chrome,
                             desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
@@ -95,10 +104,8 @@ RSpec.describe Scraypa do
                                 }
                             )
                         }
+=end
       end
-
-      make headless chrome limit the number of user agents to
-      20 and just create a new driver for each one, because needs to go into chromeOptions
 
       describe "with poltergeist driver" do
         it_behaves_like 'a javascript-enabled web agent (using Capybara)',
