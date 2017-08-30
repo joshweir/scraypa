@@ -18,19 +18,16 @@ RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |p
       expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      expect(response.text).to eq 'agent1'
       expect(response).to have_content('agent1')
       response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
       expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      #expect(response.text).to eq 'agent2'
       expect(response).to have_content('agent2')
       response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
       expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      #expect(response.text).to eq 'agent1'
       expect(response).to have_content('agent1')
     end
   end

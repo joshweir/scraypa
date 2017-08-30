@@ -1,5 +1,3 @@
-require 'capybara'
-
 module Scraypa
   include Capybara::DSL
 
@@ -13,8 +11,6 @@ module Scraypa
       @config = args[0]
       @user_agent_list_limit =
           @config.headless_chromium[:user_agent_list_limit] || 30
-      @first_visit = true
-      @capybara_vanilla_drivers = [:rack_test, :selenium]
       reset_and_setup_driver
     end
 
@@ -33,25 +29,25 @@ module Scraypa
     end
 
     def visit_get_response params={}
-      update_user_agent_if_changed unless @first_visit
-      @first_visit = false
-      puts 'visiting!!!!!!!!!!!!!!!!!'
+      update_user_agent_if_changed if @has_visited
+      @has_visited = true
       Capybara.visit params[:url]
       Capybara.page
     end
 
     def update_user_agent_if_changed
-      if @config.user_agent_retriever
-        new_user_agent = @config.user_agent_retriever.user_agent
-        if @current_user_agent != new_user_agent
-          validate_user_agent_list_limit
-          @current_user_agent = new_user_agent
-          @user_agents << @current_user_agent unless
-              @user_agents.include? @current_user_agent
-          setup_headless_chromium_driver
-        end
-      else
-        @current_user_agent = nil
+      switch_to_different_user_agent_if_different(
+          @config.user_agent_retriever.user_agent) if
+          @config.user_agent_retriever
+    end
+
+    def switch_to_different_user_agent_if_different new_user_agent
+      if @current_user_agent != new_user_agent
+        validate_user_agent_list_limit
+        @current_user_agent = new_user_agent
+        @user_agents << @current_user_agent unless
+            @user_agents.include? @current_user_agent
+        setup_headless_chromium_driver
       end
     end
 
@@ -77,32 +73,18 @@ module Scraypa
     end
 
     def reset_headless_chromium_drivers
-      puts "reseting!!!!!!!!!!!!!!!!!!!!!!!!"
-      Capybara.reset_sessions!
-      #session_pool_to_delete = []
-      #@registered_drivers ||= []
-      Capybara.send(:session_pool).each do |session_name, session|
-        session.driver.quit if session_name.include?('headless_chromium')
-        #@registered_drivers.map(&:to_s).each do |registered_driver|
-        #  if session_name.include?(registered_driver)
-        #    session.driver.quit
-        #    session_pool_to_delete << session_name
-        #    next
-        #  end
-        #end
-      end
-      Capybara.send(:session_pool).delete_if{|session_name,session|
-        #session_pool_to_delete.include? session_name
-        true
-      }
-      Capybara.drivers.delete_if{|driver_name,driver_proc|
-        #@registered_drivers.include?(driver_name)
-        #!@capybara_vanilla_drivers.include?(driver_name)
-        true
-      }
+      clear_capybara_session_pool
+      Capybara.drivers.delete_if{true}
       @current_user_agent = nil
       @user_agents = []
-      #@registered_drivers = []
+    end
+
+    def clear_capybara_session_pool
+      Capybara.reset_sessions!
+      Capybara.send(:session_pool).each do |session_name, session|
+        session.driver.quit if session_name.include?('headless_chromium')
+      end
+      Capybara.send(:session_pool).delete_if{true}
     end
 
     def setup_billy_driver
@@ -110,25 +92,19 @@ module Scraypa
     end
 
     def setup_headless_chromium_driver
-      driver_name = (@config.driver.to_s +
+      driver_name = driver_name_from_config
+      Capybara.register_driver driver_name do |app|
+        Capybara::Selenium::Driver.new(app,
+                                       build_driver_options_from_config)
+      end unless Capybara.drivers.keys.include?(driver_name)
+      Capybara.default_driver = driver_name
+    end
+
+    def driver_name_from_config
+      (@config.driver.to_s +
           (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : "") +
           (@current_user_agent ?
               "ua#{@user_agents.index(@current_user_agent)}" : "")).to_sym
-      #puts driver_name.to_s
-      #puts @user_agents.inspect
-      #puts 'capybara_drivers'
-      #puts registered_capybara_drivers.inspect
-      #puts @registered_drivers.inspect
-      puts "check should register driver: #{driver_name} #{@current_user_agent}"
-      unless registered_capybara_drivers.include?(driver_name)
-        puts "registering driver: #{driver_name} #{@current_user_agent}"
-        Capybara.register_driver driver_name do |app|
-          puts 'getting to chromeOptions'
-          Capybara::Selenium::Driver.new(app, build_driver_options_from_config)
-        end
-        #@registered_drivers << driver_name
-      end
-      Capybara.default_driver = driver_name
     end
 
     def build_driver_options_from_config
@@ -151,13 +127,7 @@ module Scraypa
         chrome_options[args_key].delete_if {|d| d.include?("user-agent=")}
         chrome_options[args_key] << "--user-agent=#{@current_user_agent}"
       end
-      puts 'user agent:'
-      puts @current_user_agent
       chrome_options
-    end
-
-    def registered_capybara_drivers
-      Capybara.drivers.keys
     end
   end
 end

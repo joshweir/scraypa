@@ -159,7 +159,15 @@ module Scraypa
     def setup_user_agent
       @user_agent_retriever = @configuration.user_agent_retriever =
         @configuration.user_agent ?
-            UserAgentFactory.build(@configuration.user_agent) : nil
+            UserAgentFactory.build(
+                merge_user_agent_list_limit_for_chrome(
+                    @configuration.user_agent)) : nil
+    end
+
+    def merge_user_agent_list_limit_for_chrome config
+      @configuration.driver == :headless_chromium &&
+          !config[:list_limit] ?
+          config.merge({list_limit: 30}) : config
     end
   end
 end

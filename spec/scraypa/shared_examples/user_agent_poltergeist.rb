@@ -15,6 +15,28 @@ RSpec.shared_examples "a user agent customizer (using :poltergeist)" do |params|
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
       expect(response).to have_content('the user agent string you want')
     end
+
+    it 'can loop through the user agents' do
+      configure_scraypa params.merge({user_agent: {list: %w(agent1 agent2)}})
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      expect(response.text).to eq 'agent1'
+      expect(response).to have_content('agent1')
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      #expect(response.text).to eq 'agent2'
+      expect(response).to have_content('agent2')
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      #expect(response.text).to eq 'agent1'
+      expect(response).to have_content('agent1')
+    end
   end
 
   context "when using defaults with no :list (no :method specified)", type: :feature,
