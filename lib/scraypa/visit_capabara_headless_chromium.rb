@@ -11,9 +11,10 @@ module Scraypa
     def initialize *args
       super(*args)
       @config = args[0]
-      setup_driver
+      reset_and_setup_driver
       @current_user_agent = nil
       @user_agents = []
+      @registered_drivers = []
       @user_agent_list_limit =
           @config.headless_chromium[:user_agent_list_limit] || 30
     end
@@ -59,9 +60,10 @@ module Scraypa
           @user_agents.length >= @user_agent_list_limit
     end
 
-    def setup_driver
+    def reset_and_setup_driver
       case @config.driver
         when :headless_chromium
+          reset_headless_chromium_drivers
           setup_headless_chromium_driver
         when :selenium_chrome_billy
           setup_billy_driver
@@ -69,6 +71,26 @@ module Scraypa
           raise CapybaraDriverUnsupported,
                 "Currently no support for capybara driver: #{@config.driver}"
       end
+    end
+
+    def reset_headless_chromium_drivers
+      Capybara.reset_sessions!
+      session_pool_to_delete = []
+      Capybara.send(:session_pool).each do |session_name, session|
+        @registered_drivers.map(&:to_s).each do |registered_driver|
+          if session_name.include?(registered_driver)
+            session.driver.quit
+            session_pool_to_delete << session_name
+            next
+          end
+        end
+      end
+      Capybara.send(:session_pool).delete_if{|session_name,session|
+        session_pool_to_delete.include? session_name
+      }
+      Capybara.drivers.delete_if{|driver_name,driver_proc|
+        @registered_drivers.include?(driver_name)
+      }
     end
 
     def setup_billy_driver
@@ -111,10 +133,13 @@ change for headless chromium config no longer uses driver_options but uses:
           (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : "") +
           (@current_user_agent ?
               "ua#{@user_agents.index(@current_user_agent)}" : "")).to_sym
-      Capybara.default_driver = driver_name
+      puts driver_name.to_s
+      puts @user_agents.inspect
+      puts registered_capybara_drivers.include?(driver_name).inspect
       Capybara.register_driver driver_name do |app|
         Capybara::Selenium::Driver.new(app, build_driver_options_from_config)
       end unless registered_capybara_drivers.include?(driver_name)
+      Capybara.default_driver = driver_name
     end
 
     def build_driver_options_from_config

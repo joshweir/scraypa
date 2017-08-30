@@ -9,8 +9,29 @@ RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |p
       expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
-      expect(response.text).to eq "the user agent string you want"
       expect(response).to have_content('the user agent string you want')
+    end
+
+    it 'can loop through the user agents' do
+      configure_scraypa params.merge({user_agent: {list: %w(agent1 agent2)}})
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      expect(response.text).to eq 'agent1'
+      expect(response).to have_content('agent1')
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      #expect(response.text).to eq 'agent2'
+      expect(response).to have_content('agent2')
+      response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
+      expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+      response.execute_script(
+          "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
+      #expect(response.text).to eq 'agent1'
+      expect(response).to have_content('agent1')
     end
   end
 
@@ -35,6 +56,12 @@ RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |p
 
   context "when using the :randomizer :user_agents option" do
     it "uses a user agent from the user agents randomizer list"
+
+    context "when :user_agent_list_limit is defined" do
+      it "will loop over limited list of length :user_agent_list_limit"
+
+      it "will print a warning message to stdout once the limit is reached"
+    end
   end
 
   context "when passing a list of user defined :user_agents" do
@@ -44,6 +71,18 @@ RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |p
 
     context "with the :round_robin :strategy" do
       it "uses a user agent from the :common_aliases list in order that is linear"
+    end
+
+    context "when :user_agent_list_limit is defined" do
+      it "will loop over limited list of length :user_agent_list_limit"
+
+      it "will print a warning message to stdout once the limit is reached"
+    end
+
+    context "when :user_agent_list_limit is not defined" do
+      it "will loop over the default of 30"
+
+      it "will print a warning message to stdout once the limit is reached"
     end
   end
 end
