@@ -160,8 +160,6 @@ module Scraypa
       @user_agent_retriever = @configuration.user_agent_retriever =
         @configuration.user_agent ?
             UserAgentFactory.build(@configuration.user_agent) : nil
-      puts @configuration.user_agent_retriever.inspect
-      @user_agent_retriever
     end
   end
 end

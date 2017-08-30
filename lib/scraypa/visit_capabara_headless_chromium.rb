@@ -74,8 +74,10 @@ module Scraypa
     end
 
     def reset_headless_chromium_drivers
+      puts "reseting!!!!!!!!!!!!!!!!!!!!!!!!"
       Capybara.reset_sessions!
       session_pool_to_delete = []
+      @registered_drivers ||= []
       Capybara.send(:session_pool).each do |session_name, session|
         @registered_drivers.map(&:to_s).each do |registered_driver|
           if session_name.include?(registered_driver)
@@ -129,16 +131,23 @@ change for headless chromium config no longer uses driver_options but uses:
 @config.headless_chromium[:args]
 
 =end
+      update_user_agent_if_changed
       driver_name = (@config.driver.to_s +
           (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : "") +
           (@current_user_agent ?
               "ua#{@user_agents.index(@current_user_agent)}" : "")).to_sym
       puts driver_name.to_s
-      puts @user_agents.inspect
-      puts registered_capybara_drivers.include?(driver_name).inspect
-      Capybara.register_driver driver_name do |app|
-        Capybara::Selenium::Driver.new(app, build_driver_options_from_config)
-      end unless registered_capybara_drivers.include?(driver_name)
+      #puts @user_agents.inspect
+      puts 'capybara_drivers'
+      puts registered_capybara_drivers.inspect
+      puts @registered_drivers.inspect
+      unless registered_capybara_drivers.include?(driver_name)
+        puts "registering driver: #{driver_name}"
+        Capybara.register_driver driver_name do |app|
+          Capybara::Selenium::Driver.new(app, build_driver_options_from_config)
+        end
+        @registered_drivers << driver_name
+      end
       Capybara.default_driver = driver_name
     end
 
