@@ -11,12 +11,11 @@ module Scraypa
     def initialize *args
       super(*args)
       @config = args[0]
-      reset_and_setup_driver
-      @current_user_agent = nil
-      @user_agents = []
-      @registered_drivers = []
       @user_agent_list_limit =
           @config.headless_chromium[:user_agent_list_limit] || 30
+      @first_visit = true
+      @capybara_vanilla_drivers = [:rack_test, :selenium]
+      reset_and_setup_driver
     end
 
     def execute params={}
@@ -34,7 +33,9 @@ module Scraypa
     end
 
     def visit_get_response params={}
-      update_user_agent_if_changed
+      update_user_agent_if_changed unless @first_visit
+      @first_visit = false
+      puts 'visiting!!!!!!!!!!!!!!!!!'
       Capybara.visit params[:url]
       Capybara.page
     end
@@ -45,7 +46,8 @@ module Scraypa
         if @current_user_agent != new_user_agent
           validate_user_agent_list_limit
           @current_user_agent = new_user_agent
-          @user_agents << @current_user_agent
+          @user_agents << @current_user_agent unless
+              @user_agents.include? @current_user_agent
           setup_headless_chromium_driver
         end
       else
@@ -64,6 +66,7 @@ module Scraypa
       case @config.driver
         when :headless_chromium
           reset_headless_chromium_drivers
+          update_user_agent_if_changed
           setup_headless_chromium_driver
         when :selenium_chrome_billy
           setup_billy_driver
@@ -76,23 +79,30 @@ module Scraypa
     def reset_headless_chromium_drivers
       puts "reseting!!!!!!!!!!!!!!!!!!!!!!!!"
       Capybara.reset_sessions!
-      session_pool_to_delete = []
-      @registered_drivers ||= []
+      #session_pool_to_delete = []
+      #@registered_drivers ||= []
       Capybara.send(:session_pool).each do |session_name, session|
-        @registered_drivers.map(&:to_s).each do |registered_driver|
-          if session_name.include?(registered_driver)
-            session.driver.quit
-            session_pool_to_delete << session_name
-            next
-          end
-        end
+        session.driver.quit if session_name.include?('headless_chromium')
+        #@registered_drivers.map(&:to_s).each do |registered_driver|
+        #  if session_name.include?(registered_driver)
+        #    session.driver.quit
+        #    session_pool_to_delete << session_name
+        #    next
+        #  end
+        #end
       end
       Capybara.send(:session_pool).delete_if{|session_name,session|
-        session_pool_to_delete.include? session_name
+        #session_pool_to_delete.include? session_name
+        true
       }
       Capybara.drivers.delete_if{|driver_name,driver_proc|
-        @registered_drivers.include?(driver_name)
+        #@registered_drivers.include?(driver_name)
+        #!@capybara_vanilla_drivers.include?(driver_name)
+        true
       }
+      @current_user_agent = nil
+      @user_agents = []
+      #@registered_drivers = []
     end
 
     def setup_billy_driver
@@ -100,53 +110,23 @@ module Scraypa
     end
 
     def setup_headless_chromium_driver
-      #needs to do this:
-
-      #not just args, args needs to be inside the capabilities object
-      #desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-      #    "chromeOptions" => {
-      #        'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
-      #        'args' => ["no-sandbox", "disable-gpu", "headless",
-      #                   "window-size=1092,1080"]
-      #    }
-      #)
-=begin
-  @config.driver_options looked like this:
-
-  {
-  browser: :chrome,
-  desired_capabilities: Selenium......
-    "chromeOptions" => {
-      'binary' =>
-      'args' =>
-    }
-  }
-  optionally:
-  args: ['args']
-
-change for headless chromium config no longer uses driver_options but uses:
-
-@config.headless_chromium[:browser]
-@config.headless_chromium[:chromeOptions]
-@config.headless_chromium[:args]
-
-=end
-      update_user_agent_if_changed
       driver_name = (@config.driver.to_s +
           (@config.tor ? "tor#{@config.tor_options[:tor_port]}" : "") +
           (@current_user_agent ?
               "ua#{@user_agents.index(@current_user_agent)}" : "")).to_sym
-      puts driver_name.to_s
+      #puts driver_name.to_s
       #puts @user_agents.inspect
-      puts 'capybara_drivers'
-      puts registered_capybara_drivers.inspect
-      puts @registered_drivers.inspect
+      #puts 'capybara_drivers'
+      #puts registered_capybara_drivers.inspect
+      #puts @registered_drivers.inspect
+      puts "check should register driver: #{driver_name} #{@current_user_agent}"
       unless registered_capybara_drivers.include?(driver_name)
-        puts "registering driver: #{driver_name}"
+        puts "registering driver: #{driver_name} #{@current_user_agent}"
         Capybara.register_driver driver_name do |app|
+          puts 'getting to chromeOptions'
           Capybara::Selenium::Driver.new(app, build_driver_options_from_config)
         end
-        @registered_drivers << driver_name
+        #@registered_drivers << driver_name
       end
       Capybara.default_driver = driver_name
     end
@@ -171,6 +151,8 @@ change for headless chromium config no longer uses driver_options but uses:
         chrome_options[args_key].delete_if {|d| d.include?("user-agent=")}
         chrome_options[args_key] << "--user-agent=#{@current_user_agent}"
       end
+      puts 'user agent:'
+      puts @current_user_agent
       chrome_options
     end
 
