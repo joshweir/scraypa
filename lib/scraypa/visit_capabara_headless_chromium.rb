@@ -2,15 +2,12 @@ module Scraypa
   include Capybara::DSL
 
   CapybaraDriverUnsupported = Class.new(StandardError)
-  TooManyUserAgents = Class.new(StandardError)
   HeadlessChromiumMissingConfig = Class.new(StandardError)
 
   class VisitCapybaraHeadlessChromium < VisitInterface
     def initialize *args
       super(*args)
       @config = args[0]
-      @user_agent_list_limit =
-          @config.headless_chromium[:user_agent_list_limit] || 30
       reset_and_setup_driver
     end
 
@@ -36,26 +33,17 @@ module Scraypa
     end
 
     def update_user_agent_if_changed
-      switch_to_different_user_agent_if_different(
-          @config.user_agent_retriever.user_agent) if
-          @config.user_agent_retriever
+      new_user_agent = @config.user_agent_retriever.user_agent
+      update_user_agent_and_setup_driver new_user_agent if
+          @config.user_agent_retriever &&
+          @current_user_agent != new_user_agent
     end
 
-    def switch_to_different_user_agent_if_different new_user_agent
-      if @current_user_agent != new_user_agent
-        validate_user_agent_list_limit
-        @current_user_agent = new_user_agent
-        @user_agents << @current_user_agent unless
-            @user_agents.include? @current_user_agent
-        setup_headless_chromium_driver
-      end
-    end
-
-    def validate_user_agent_list_limit
-      raise TooManyUserAgents,
-            "Only #{@user_agent_list_limit} user agents can be " +
-                "used with #{@config.driver}" if
-          @user_agents.length >= @user_agent_list_limit
+    def update_user_agent_and_setup_driver new_user_agent
+      @current_user_agent = new_user_agent
+      @user_agents << @current_user_agent unless
+          @user_agents.include? @current_user_agent
+      setup_headless_chromium_driver
     end
 
     def reset_and_setup_driver

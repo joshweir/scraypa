@@ -12,12 +12,23 @@ module Scraypa
         it "uses the USER_AGENT_LIST" do
           expect(USER_AGENT_LIST.values).to include subject.user_agent
         end
+
+        context "with :list_limit specified" do
+          let(:subject) { UserAgentIterator.new list_limit: 2 }
+          it "limits the list to :list_limit items" do
+            expect(USER_AGENT_LIST.values).to eq USER_AGENT_LIST.values[0..1]
+          end
+        end
       end
 
       context "when instantiated with a :list param" do
         let(:subject) { UserAgentIterator.new list: ['agent1', 'agent2'] }
         it "uses the specified :list" do
           expect(['agent1', 'agent2']).to include subject.user_agent
+        end
+
+        context "with :list_limit specified" do
+          it "limits the list to :list_limit items"
         end
       end
 

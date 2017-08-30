@@ -38,6 +38,10 @@ module Scraypa
           expect(attempts.uniq.length).to eq attempts.length
         end
       end
+
+      context "when :list_limit specified" do
+        it "limits the list to :list_limit items"
+      end
     end
 
     describe "#list" do
