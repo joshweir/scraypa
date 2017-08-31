@@ -6,6 +6,9 @@ module Scraypa
           VisitCapybaraPoltergeist.new(*args)
         elsif args[0].driver == :headless_chromium
           VisitCapybaraHeadlessChromium.new(*args)
+        else
+          raise CapybaraDriverUnsupported,
+                "Currently no support for capybara driver: #{args[0].driver}"
         end
       else
         VisitRestClient.new(*args)

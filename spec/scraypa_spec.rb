@@ -58,7 +58,7 @@ RSpec.describe Scraypa do
                         /Capybara :headless_chromium does not support Tor/
     end
 
-    it_behaves_like "a web agent setter-upper-er"
+    it_behaves_like "a web agent, user agent, tor, throttle setter-upper-er"
   end
 
   describe ".configuration" do
@@ -90,26 +90,30 @@ RSpec.describe Scraypa do
       expect(Scraypa.configuration.use_capybara).to be_nil
     end
 
-    it_behaves_like "a web agent setter-upper-er"
+    it_behaves_like "a web agent, user agent, tor, throttle setter-upper-er"
   end
 
   describe ".visit" do
-    it "sets up the web agent if it is not yet" do
-      Scraypa.agent = nil
-      expect(Scraypa).to receive(:setup_agent)
-      expect(Scraypa.agent)
-          .to receive(:execute)
-                  .with(method: :get, url: "http://example.com")
-      Scraypa.visit method: :get, url: "http://example.com"
+    context "when the web agent is not yet setup" do
+      it "sets up scraypa" do
+        Scraypa.agent = nil
+        expect(Scraypa).to receive(:setup_agent)
+        expect(Scraypa.agent)
+            .to receive(:execute)
+                    .with(method: :get, url: "http://example.com")
+        Scraypa.visit method: :get, url: "http://example.com"
+      end
     end
 
-    it "doesn't setup the web agent if it is already" do
-      Scraypa.reset #reset sets up the agent
-      expect(Scraypa).to_not receive(:setup_agent)
-      expect(Scraypa.agent)
-          .to receive(:execute)
-                  .with(method: :get, url: "http://example.com")
-      Scraypa.visit method: :get, url: "http://example.com"
+    context "when the web agent is already setup" do
+      it "doesn't setup scraypa again" do
+        Scraypa.reset #reset sets up the agent
+        expect(Scraypa).to_not receive(:setup_agent)
+        expect(Scraypa.agent)
+            .to receive(:execute)
+                    .with(method: :get, url: "http://example.com")
+        Scraypa.visit method: :get, url: "http://example.com"
+      end
     end
 
     context "when using default config: Rest-Client (not using javascript)" do
@@ -203,7 +207,7 @@ RSpec.describe Scraypa do
         end
 
         context "with user agent specified" do
-          it "utlises the user agent in the web request" do
+          it "utilises the user agent in the web request" do
             Scraypa.reset
             Scraypa.configure do |c|
               c.use_capybara = true

@@ -33,10 +33,11 @@ module Scraypa
     end
 
     def update_user_agent_if_changed
-      new_user_agent = @config.user_agent_retriever.user_agent
-      update_user_agent_and_setup_driver new_user_agent if
-          @config.user_agent_retriever &&
-          @current_user_agent != new_user_agent
+      if @config.user_agent_retriever
+        new_user_agent = @config.user_agent_retriever.user_agent
+        update_user_agent_and_setup_driver new_user_agent if
+            @current_user_agent != new_user_agent
+      end
     end
 
     def update_user_agent_and_setup_driver new_user_agent

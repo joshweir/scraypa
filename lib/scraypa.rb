@@ -75,6 +75,20 @@ module Scraypa
       setup_throttle
     end
 
+    def setup_user_agent
+      @user_agent_retriever = @configuration.user_agent_retriever =
+          @configuration.user_agent ?
+              UserAgentFactory.build(
+                  merge_user_agent_list_limit_for_chrome(
+                      @configuration.user_agent)) : nil
+    end
+
+    def merge_user_agent_list_limit_for_chrome config
+      @configuration.driver == :headless_chromium &&
+          !config[:list_limit] ?
+          config.merge({list_limit: 30}) : config
+    end
+
     def setup_tor
       ensure_tor_options_are_configured
       using_tor? && !tor_running_in_current_process? ?
@@ -154,20 +168,6 @@ module Scraypa
 
     def reset_throttle
       @throttle.last_request_time = nil if @throttle
-    end
-
-    def setup_user_agent
-      @user_agent_retriever = @configuration.user_agent_retriever =
-        @configuration.user_agent ?
-            UserAgentFactory.build(
-                merge_user_agent_list_limit_for_chrome(
-                    @configuration.user_agent)) : nil
-    end
-
-    def merge_user_agent_list_limit_for_chrome config
-      @configuration.driver == :headless_chromium &&
-          !config[:list_limit] ?
-          config.merge({list_limit: 30}) : config
     end
   end
 end
