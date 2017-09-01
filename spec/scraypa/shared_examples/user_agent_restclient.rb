@@ -22,7 +22,7 @@ RSpec.shared_examples "a user agent customizer (using RestClient)" do |params|
 
   context "when using defaults with no :list (no :method specified)" do
     before :all do
-      stub_request(:get, "http://example.com/").
+      stub_request(:get, "http://bot.whatismyipaddress.com/").
           to_return(status: 200, body: "test response", headers: {})
     end
 
@@ -32,25 +32,98 @@ RSpec.shared_examples "a user agent customizer (using RestClient)" do |params|
     end
 
     context "with the :randomize :strategy" do
-      it "uses a user agent from the :common_aliases list in order that isn't linear"
+      before :all do
+        stub_request(:get, "http://bot.whatismyipaddress.com/").
+            to_return(status: 200, body: "test response", headers: {})
+      end
+
+      it "uses a user agent from the common_aliases list in order that isn't linear" do
+        expect_common_aliases_random params
+      end
     end
 
     context "with the :round_robin :strategy" do
-      it "uses a user agent from the :common_aliases list in order that is linear"
+      before :all do
+        stub_request(:get, "http://bot.whatismyipaddress.com/").
+            to_return(status: 200, body: "test response", headers: {})
+      end
+
+      it "uses a user agent from the common_aliases list in order that is linear" do
+        expect_common_aliases_round_robin params
+      end
     end
   end
 
-  context "when using the :randomizer :user_agents option" do
-    it "uses a user agent from the user agents randomizer list"
+  context "when using the :randomizer :method option" do
+    before :all do
+      stub_request(:get, "http://bot.whatismyipaddress.com/").
+          to_return(status: 200, body: "test response", headers: {})
+    end
+
+    it "uses a user agent from the user agents randomizer list" do
+      expect_ua_randomizer params
+    end
+
+    context "when :list_limit is defined" do
+      before :all do
+        stub_request(:get, "http://bot.whatismyipaddress.com/").
+            to_return(status: 200, body: "test response", headers: {})
+      end
+
+      it "will loop over limited list of length :list_limit" do
+        expect_ua_randomizer_list_limit params
+      end
+    end
   end
 
   context "when passing a list of user defined :user_agents" do
+    before :all do
+      stub_request(:get, "http://bot.whatismyipaddress.com/").
+          to_return(status: 200, body: "test response", headers: {})
+    end
+
     context "with the :randomize :strategy" do
-      it "uses a user agent from the :common_aliases list in order that isn't linear"
+      before :all do
+        stub_request(:get, "http://bot.whatismyipaddress.com/").
+            to_return(status: 200, body: "test response", headers: {})
+      end
+
+      it "uses a user agent from the specified list in order that isn't linear" do
+        expect_ua_list_random params
+      end
+
+      context "when :list_limit is defined" do
+        before :all do
+          stub_request(:get, "http://bot.whatismyipaddress.com/").
+              to_return(status: 200, body: "test response", headers: {})
+        end
+
+        it "will loop over limited list of length :list_limit" do
+          expect_ua_list_random_list_limit params
+        end
+      end
     end
 
     context "with the :round_robin :strategy" do
-      it "uses a user agent from the :common_aliases list in order that is linear"
+      before :all do
+        stub_request(:get, "http://bot.whatismyipaddress.com/").
+            to_return(status: 200, body: "test response", headers: {})
+      end
+
+      it "uses a user agent from the specified list in order that is linear" do
+        expect_ua_list_round_robin params
+      end
+
+      context "when :list_limit is defined" do
+        before :all do
+          stub_request(:get, "http://bot.whatismyipaddress.com/").
+              to_return(status: 200, body: "test response", headers: {})
+        end
+
+        it "will loop over limited list of length :list_limit" do
+          expect_ua_list_round_robin_list_limit params
+        end
+      end
     end
   end
 end

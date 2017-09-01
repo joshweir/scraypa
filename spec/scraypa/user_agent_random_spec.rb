@@ -40,7 +40,15 @@ module Scraypa
       end
 
       context "when :list_limit specified" do
-        it "limits the list to :list_limit items"
+        let(:subject) { UserAgentRandom.new list_limit: 2 }
+        it "limits the list to :list_limit items" do
+          user_agents = []
+          3.times do
+            user_agents << subject.user_agent
+          end
+          expect(user_agents[0]).to eq user_agents[2]
+          expect(user_agents[0]).to_not eq user_agents[1]
+        end
       end
     end
 

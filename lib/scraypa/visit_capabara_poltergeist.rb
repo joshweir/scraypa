@@ -5,8 +5,6 @@ require 'phantomjs'
 module Scraypa
   include Capybara::DSL
 
-  CapybaraDriverUnsupported = Class.new(StandardError)
-
   class VisitCapybaraPoltergeist < VisitInterface
     def initialize *args
       super(*args)

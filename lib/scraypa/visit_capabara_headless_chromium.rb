@@ -1,9 +1,6 @@
 module Scraypa
   include Capybara::DSL
 
-  CapybaraDriverUnsupported = Class.new(StandardError)
-  HeadlessChromiumMissingConfig = Class.new(StandardError)
-
   class VisitCapybaraHeadlessChromium < VisitInterface
     def initialize *args
       super(*args)

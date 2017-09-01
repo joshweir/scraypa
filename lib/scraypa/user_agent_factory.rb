@@ -1,6 +1,4 @@
 module Scraypa
-  UnrecognisedUserAgentsMethod = Class.new(StandardError)
-
   class UserAgentFactory
     def self.build(*args)
       #{

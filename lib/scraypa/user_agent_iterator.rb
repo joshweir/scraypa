@@ -5,10 +5,11 @@ module Scraypa
     def initialize *args
       super(*args)
       @config = args[0] || {}
-      @list = to_array(@config.fetch(:list, USER_AGENT_LIST))
-      @reducing_list = @list.clone
-      @strategy = @config.fetch(:strategy, :roundrobin)
       @change_after_n_requests = @config.fetch(:change_after_n_requests, 0)
+      @list_limit = @config.fetch(:list_limit, 0).to_i
+      @strategy = @config.fetch(:strategy, :roundrobin)
+      @list = limit_list to_array@config.fetch(:list, USER_AGENT_LIST)
+      @reducing_list = @list.clone
       @current_user_agent = nil
       @current_user_agent_requests = 0
     end
@@ -38,6 +39,27 @@ module Scraypa
         else
           [variable]
       end
+    end
+
+    def limit_list list
+      @list_limit <= 0 || @list_limit >= list.length ?
+          list :
+          @strategy == :randomize ?
+              limit_list_randomly(list) :
+              list[0..@list_limit-1]
+    end
+
+    def limit_list_randomly list
+      random_list = []
+      loop do
+        sample = list.sample
+        if list.include? sample
+          random_list << sample
+          list.delete(sample)
+        end
+        break if random_list.length >= @list_limit
+      end
+      random_list
     end
 
     def get_a_new_user_agent?

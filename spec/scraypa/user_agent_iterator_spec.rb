@@ -16,7 +16,7 @@ module Scraypa
         context "with :list_limit specified" do
           let(:subject) { UserAgentIterator.new list_limit: 2 }
           it "limits the list to :list_limit items" do
-            expect(USER_AGENT_LIST.values).to eq USER_AGENT_LIST.values[0..1]
+            expect(subject.list).to eq USER_AGENT_LIST.values[0..1]
           end
         end
       end
@@ -28,7 +28,11 @@ module Scraypa
         end
 
         context "with :list_limit specified" do
-          it "limits the list to :list_limit items"
+          let(:subject) { UserAgentIterator.new list: %w(agent1 agent2 agent3),
+                                                list_limit: 2}
+          it "limits the list to :list_limit items" do
+            expect(subject.list).to eq %w(agent1 agent2)
+          end
         end
       end
 

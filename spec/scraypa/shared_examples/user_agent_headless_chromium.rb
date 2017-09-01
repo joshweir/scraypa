@@ -19,16 +19,19 @@ RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |p
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
       expect(response).to have_content('agent1')
+      expect(Scraypa.user_agent).to eq 'agent1'
       response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
       expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
       expect(response).to have_content('agent2')
+      expect(Scraypa.user_agent).to eq 'agent2'
       response = Scraypa.visit url: "http://bot.whatismyipaddress.com"
       expect(response).to have_content(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
       response.execute_script(
           "document.getElementsByTagName('body')[0].innerHTML = navigator.userAgent;")
       expect(response).to have_content('agent1')
+      expect(Scraypa.user_agent).to eq 'agent1'
     end
   end
 
@@ -43,43 +46,53 @@ RSpec.shared_examples "a user agent customizer (using :headless_chromium)" do |p
     end
 
     context "with the :randomize :strategy" do
-      it "uses a user agent from the :common_aliases list in order that isn't linear"
+      it "uses a user agent from the common_aliases list in order that isn't linear" do
+        expect_common_aliases_random params
+      end
     end
 
     context "with the :round_robin :strategy" do
-      it "uses a user agent from the :common_aliases list in order that is linear"
+      it "uses a user agent from the common_aliases list in order that is linear" do
+        expect_common_aliases_round_robin params
+      end
     end
   end
 
-  context "when using the :randomizer :user_agents option" do
-    it "uses a user agent from the user agents randomizer list"
+  context "when using the :randomizer :method option" do
+    it "uses a user agent from the user agents randomizer list" do
+      expect_ua_randomizer params
+    end
 
-    context "when :user_agent_list_limit is defined" do
-      it "will loop over limited list of length :user_agent_list_limit"
-
-      it "will print a warning message to stdout once the limit is reached"
+    context "when :list_limit is defined" do
+      it "will loop over limited list of length :list_limit" do
+        expect_ua_randomizer_list_limit params
+      end
     end
   end
 
   context "when passing a list of user defined :user_agents" do
     context "with the :randomize :strategy" do
-      it "uses a user agent from the :common_aliases list in order that isn't linear"
+      it "uses a user agent from the specified list in order that isn't linear" do
+        expect_ua_list_random params
+      end
+
+      context "when :list_limit is defined" do
+        it "will loop over limited list of length :list_limit" do
+          expect_ua_list_random_list_limit params
+        end
+      end
     end
 
     context "with the :round_robin :strategy" do
-      it "uses a user agent from the :common_aliases list in order that is linear"
-    end
+      it "uses a user agent from the specified list in order that is linear" do
+        expect_ua_list_round_robin params
+      end
 
-    context "when :user_agent_list_limit is defined" do
-      it "will loop over limited list of length :user_agent_list_limit"
-
-      it "will print a warning message to stdout once the limit is reached"
-    end
-
-    context "when :user_agent_list_limit is not defined" do
-      it "will loop over the default of 30"
-
-      it "will print a warning message to stdout once the limit is reached"
+      context "when :list_limit is defined" do
+        it "will loop over limited list of length :list_limit" do
+          expect_ua_list_round_robin_list_limit params
+        end
+      end
     end
   end
 end

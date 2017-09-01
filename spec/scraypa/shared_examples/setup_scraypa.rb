@@ -183,7 +183,59 @@ RSpec.shared_examples "a web agent, user agent, tor, throttle setter-upper-er" d
     end
   end
 
-  context "when config :throttle is specified" do
+  context "when config :throttle_seconds is specified" do
+    context "when :throttle_seconds is > 0" do
+      it "creates a throttle instance based on :throttle_seconds" do
+        expect_throttle_instance_from_throttle_seconds 0.1
+      end
+    end
+    context "when :throttle_seconds is == 0" do
+      it "does not create a throttle instance" do
+        expect_no_throttle_instance_from_throttle_seconds 0
+      end
+    end
+    context "when :throttle_seconds is not a hash or number" do
+      it "does not create a throttle instance" do
+        expect_no_throttle_instance_from_throttle_seconds "foo"
+      end
+    end
+    context "when :throttle_seconds is a hash range" do
+      it "creates a throttle instance based on :throttle_seconds" do
+        range = {from: 0.1, to: 2.5}
+        expect_throttle_instance_from_throttle_seconds range
+      end
+    end
+    context "when :throttle_seconds is different to current config" do
+      it "creates a new throttle instance based on changed :throttle_seconds" do
+        allow(Scraypa).to receive(:destruct_tor)
+        Scraypa.reset
+        Scraypa.configure { |c|
+          c.throttle_seconds = 0.1
+        }
+        expect(Scraypa.throttle.seconds).to eq 0.1
+        Scraypa.configure { |c|
+          c.throttle_seconds = 0.2
+        }
+        expect(Scraypa.throttle.seconds).to eq 0.2
+      end
+    end
+  end
 
+  def expect_throttle_instance_from_throttle_seconds throttle_seconds
+    allow(Scraypa).to receive(:destruct_tor)
+    Scraypa.reset
+    Scraypa.configure { |c|
+      c.throttle_seconds = throttle_seconds
+    }
+    expect(Scraypa.throttle.seconds).to eq throttle_seconds
+  end
+
+  def expect_no_throttle_instance_from_throttle_seconds throttle_seconds
+    allow(Scraypa).to receive(:destruct_tor)
+    Scraypa.reset
+    Scraypa.configure { |c|
+      c.throttle_seconds = throttle_seconds
+    }
+    expect(Scraypa.throttle).to be_nil
   end
 end

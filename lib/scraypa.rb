@@ -14,7 +14,10 @@ require "scraypa/throttle"
 require 'tormanager'
 
 module Scraypa
-  TorNotSupportedByAgent = Class.new(StandardError)
+  class TorNotSupportedByAgent < StandardError; end
+  class UnrecognisedUserAgentsMethod < StandardError; end
+  class CapybaraDriverUnsupported < StandardError; end
+  class HeadlessChromiumMissingConfig < StandardError; end
 
   class << self
     attr_accessor :agent, :tor_process, :tor_ip_control, :tor_proxy,
@@ -155,7 +158,7 @@ module Scraypa
     def throttle_config_has_changed?
       @configuration.throttle_seconds &&
           (@configuration.throttle_seconds.is_a?(Hash) ||
-              @configuration.throttle_seconds > 0) &&
+              @configuration.throttle_seconds.to_f > 0) &&
           (!@throttle || @throttle.seconds != @configuration.throttle_seconds)
     end
 
@@ -168,6 +171,7 @@ module Scraypa
 
     def reset_throttle
       @throttle.last_request_time = nil if @throttle
+      @throttle = nil
     end
   end
 end
