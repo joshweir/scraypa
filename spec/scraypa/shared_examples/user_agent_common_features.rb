@@ -36,7 +36,6 @@ def expect_common_aliases_random params
   user_agents.each do |user_agent|
     expect(common_agents).to include user_agent
   end
-  expect(user_agents.uniq).to eq user_agents
 end
 
 def expect_common_aliases_round_robin params

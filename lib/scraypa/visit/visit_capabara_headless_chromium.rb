@@ -60,7 +60,10 @@ module Scraypa
 
     def reset_headless_chromium_drivers
       clear_capybara_session_pool
-      Capybara.drivers.delete_if{true}
+      Capybara.drivers.delete_if{|k,v|
+        ![:poltergeist_billy,
+          :selenium_chrome_billy].include?(k)
+      }
       @current_user_agent = nil
       @user_agents = []
     end

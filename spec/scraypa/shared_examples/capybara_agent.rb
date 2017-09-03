@@ -11,15 +11,13 @@ RSpec.shared_examples "a javascript-enabled web agent (using Capybara)" do |para
             :phantomjs_options => ["--web-security=true"]
         }
       elsif params[:driver] == :headless_chromium
-        config.driver_options = {
+        config.headless_chromium = {
             browser: :chrome,
-            desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-                "chromeOptions" => {
-                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
-                    'args' => ["headless", "no-sandbox", "disable-gpu",
-                               "window-size=1092,1080"]
-                }
-            )
+            chromeOptions: {
+                'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                'args' => ["no-sandbox", "disable-gpu", "headless",
+                           "window-size=1092,1080"]
+            }
         }
       else
         raise "invalid params[:driver]: #{params[:driver]}"

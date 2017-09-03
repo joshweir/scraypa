@@ -165,6 +165,14 @@ RSpec.shared_examples "a web agent, user agent, tor, throttle setter-upper-er" d
       Scraypa.configure { |c|
         c.use_capybara = true
         c.driver = :headless_chromium
+        c.headless_chromium = {
+            browser: :chrome,
+            chromeOptions: {
+                'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                'args' => ["no-sandbox", "disable-gpu", "headless",
+                           "window-size=1092,1080"]
+            }
+        }
         c.user_agent = {list: 'agent1'}
       }
     end
@@ -178,6 +186,14 @@ RSpec.shared_examples "a web agent, user agent, tor, throttle setter-upper-er" d
       Scraypa.configure { |c|
         c.use_capybara = true
         c.driver = :headless_chromium
+        c.headless_chromium = {
+            browser: :chrome,
+            chromeOptions: {
+                'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                'args' => ["no-sandbox", "disable-gpu", "headless",
+                           "window-size=1092,1080"]
+            }
+        }
         c.user_agent = {list: 'agent1', list_limit: 5}
       }
     end

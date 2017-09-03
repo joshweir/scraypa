@@ -26,6 +26,9 @@ module Scraypa
           c = Configuration.new
           c.use_capybara = true
           c.driver = :headless_chromium
+          c.headless_chromium = {
+              browser: :chrome
+          }
           c
         }
         let(:subject) { VisitFactory.build(config) }

@@ -7,8 +7,8 @@ RSpec.shared_examples "a user agent customizer (using :poltergeist)" do |params|
     end
 
     it 'uses the customized user agent' do
-      Capybara.page.driver.add_headers("User-Agent" => "the user agent string you want")
       configure_scraypa params.merge({driver: :poltergeist_billy})
+      Capybara.page.driver.add_headers("User-Agent" => "the user agent string you want")
       response = Scraypa.visit url: "http://www.google.com/"
       expect(response).to have_content('test response')
       response.execute_script(

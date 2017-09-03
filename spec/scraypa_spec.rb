@@ -167,6 +167,14 @@ RSpec.describe Scraypa do
           Scraypa.configure do |c|
             c.use_capybara = true
             c.driver = :headless_chromium
+            c.headless_chromium = {
+                browser: :chrome,
+                chromeOptions: {
+                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
+                    'args' => ["no-sandbox", "disable-gpu", "headless",
+                               "window-size=1092,1080"]
+                }
+            }
             c.tor = nil
             c.user_agent = nil
           end
@@ -220,9 +228,10 @@ RSpec.describe Scraypa do
             expect(Capybara)
                 .to receive(:visit)
                         .with("http://example.com")
-            expect(Capybara.page.driver)
-                .to receive(:add_headers)
+            expect(Capybara)
+                .to receive_message_chain("page.driver.add_headers")
                         .with("User-Agent" => "my user agent")
+            expect(Capybara).to receive(:page)
             Scraypa.visit method: :get, url: "http://example.com"
           end
         end
