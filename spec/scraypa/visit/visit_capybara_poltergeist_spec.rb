@@ -37,12 +37,7 @@ module Scraypa
           config.tor_options = {tor_port: 9050}
           config.tor_proxy = double("tor_proxy")
           params = {method: :get, url: "http://example.com"}
-          app = double("app")
-          expect(Capybara).to receive(:register_driver)
-                                  .with(:poltergeisttor9050)
-                                  .and_yield(app)
-          expect(Capybara::Poltergeist::Driver)
-              .to receive(:new).with(app, {})
+          expect_capybara_driver_setup_with_driver :poltergeisttor9050
           expect(config.tor_proxy).to receive(:proxy).and_yield
           expect(Capybara).to receive(:visit).with(params[:url])
           expect(Capybara).to receive(:page)
@@ -56,12 +51,7 @@ module Scraypa
           config.driver = :poltergeist
           config.tor_proxy = double("tor_proxy")
           params = {method: :get, url: "http://example.com"}
-          app = double("app")
-          expect(Capybara).to receive(:register_driver)
-                                  .with(:poltergeist)
-                                  .and_yield(app)
-          expect(Capybara::Poltergeist::Driver)
-              .to receive(:new).with(app, {})
+          expect_capybara_driver_setup_with_driver :poltergeist
           expect(config.tor_proxy).to_not receive(:proxy).and_yield
           expect(Capybara).to receive(:visit).with(params[:url])
           expect(Capybara).to receive(:page)
@@ -82,12 +72,7 @@ module Scraypa
                   user_agent: "agent1"
               }
           }
-          app = double("app")
-          expect(Capybara).to receive(:register_driver)
-                                  .with(:poltergeist)
-                                  .and_yield(app)
-          expect(Capybara::Poltergeist::Driver)
-              .to receive(:new).with(app, {})
+          expect_capybara_driver_setup_with_driver :poltergeist
           expect(config.user_agent_retriever)
               .to receive(:user_agent)
                       .and_return("agent1")
@@ -99,6 +84,14 @@ module Scraypa
           VisitCapybaraPoltergeist.new(config).execute params
         end
       end
+    end
+    def expect_capybara_driver_setup_with_driver driver
+      app = double("app")
+      expect(Capybara).to receive(:register_driver)
+                              .with(driver)
+                              .and_yield(app)
+      expect(Capybara::Poltergeist::Driver)
+          .to receive(:new).with(app, {})
     end
   end
 end
