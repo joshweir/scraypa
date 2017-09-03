@@ -10,20 +10,7 @@ RSpec.describe Scraypa do
   it "has a version number" do
     expect(Scraypa::VERSION).not_to be nil
   end
-=begin
-  describe "puffing billy poltergeist exploratory test", type: :feature,
-           driver: :poltergeist_billy do
-    before :all do
-      proxy.stub('http://www.google.com/')
-          .and_return(:text => "test response")
-    end
 
-    it 'stubs google.com' do
-      visit "http://www.google.com/"
-      expect(page).to have_content('test response')
-    end
-  end
-=end
   describe ".visit" do
     context "when using Rest-Client (not using javascript)" do
       before :all do
@@ -55,9 +42,6 @@ RSpec.describe Scraypa do
                         use_capybara: true,
                         driver: :headless_chromium
 
-        #it_behaves_like 'a Tor-able web agent',
-        #                use_capybara: true,
-        #                driver: :headless_chromium
         it "does not support Tor" do
           expect {
             Scraypa.configure do |config|
@@ -93,18 +77,6 @@ RSpec.describe Scraypa do
                                            "window-size=1092,1080", "user-agent=test"]
                             }
                         }
-=begin
-                        driver_options: {
-                            browser: :chrome,
-                            desired_capabilities: Selenium::WebDriver::Remote::Capabilities.chrome(
-                                "chromeOptions" => {
-                                    'binary' => "#{ENV['HOME']}/chromium/src/out/Default/chrome",
-                                    'args' => ["no-sandbox", "disable-gpu", "headless",
-                                               "window-size=1092,1080", "user-agent=test"]
-                                }
-                            )
-                        }
-=end
       end
 
       describe "with poltergeist driver" do
