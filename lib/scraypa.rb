@@ -11,6 +11,7 @@ require "scraypa/user_agent/user_agent_iterator"
 require "scraypa/user_agent/user_agent_random"
 require "scraypa/user_agent/user_agent_factory"
 require "scraypa/throttle"
+require "scraypa/driver_resetter"
 require 'tormanager'
 
 module Scraypa

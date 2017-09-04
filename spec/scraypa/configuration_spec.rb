@@ -134,5 +134,19 @@ module Scraypa
         expect(config.headless_chromium).to eq 'test'
       end
     end
+
+    describe "#reset_driver_every_n_requests" do
+      it "should have a default value of 5" do
+        expect(Configuration.new.reset_driver_every_n_requests).to eq 5
+      end
+    end
+
+    describe "#reset_driver_every_n_requestsm=" do
+      it "can set value" do
+        config = Configuration.new
+        config.reset_driver_every_n_requests = 6
+        expect(config.reset_driver_every_n_requests).to eq 6
+      end
+    end
   end
 end
