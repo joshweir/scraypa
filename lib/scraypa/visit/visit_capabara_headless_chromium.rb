@@ -77,7 +77,7 @@ module Scraypa
       Capybara.register_driver driver_name do |app|
         Capybara::Selenium::Driver.new(app,
                                        build_driver_options_from_config)
-      end unless Capybara.drivers.keys.include?(driver_name)
+      end unless Capybara.drivers.keys.include? driver_name
       Capybara.default_driver = driver_name
     end
 
@@ -93,7 +93,7 @@ module Scraypa
       if @config.headless_chromium[:chromeOptions] || @current_user_agent
         driver_options[:desired_capabilities] =
             Selenium::WebDriver::Remote::Capabilities.chrome(
-                "chromeOptions" =>
+                :chromeOptions =>
                     merge_user_agent_with_chrome_options
             )
       end
