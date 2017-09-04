@@ -9,18 +9,10 @@ module Scraypa
     end
 
     def execute params={}
-      @config.tor && @config.tor_proxy ?
-          visit_get_response_through_tor(params) :
-          visit_get_response(params)
+      visit_get_response params
     end
 
     private
-
-    def visit_get_response_through_tor params={}
-      @config.tor_proxy.proxy do
-        return visit_get_response params
-      end
-    end
 
     def visit_get_response params={}
       update_user_agent_if_changed if @has_visited
@@ -98,19 +90,22 @@ module Scraypa
 
     def build_driver_options_from_config
       driver_options = {browser: @config.headless_chromium[:browser] || :chrome}
-      driver_options[:desired_capabilities] =
-          Selenium::WebDriver::Remote::Capabilities.chrome(
-              "chromeOptions" =>
-                  merge_user_agent_with_chrome_options
-          ) if @config.headless_chromium[:chromeOptions]
+      if @config.headless_chromium[:chromeOptions] || @current_user_agent
+        driver_options[:desired_capabilities] =
+            Selenium::WebDriver::Remote::Capabilities.chrome(
+                "chromeOptions" =>
+                    merge_user_agent_with_chrome_options
+            )
+      end
       driver_options[:args] = @config.headless_chromium[:args] if
           @config.headless_chromium[:args]
       driver_options
     end
 
     def merge_user_agent_with_chrome_options
-      chrome_options = @config.headless_chromium[:chromeOptions]
-      if @current_user_agent && chrome_options &&
+      chrome_options =
+          @config.headless_chromium[:chromeOptions] || {args: []}
+      if @current_user_agent &&
           (chrome_options[:args] || chrome_options['args'])
         args_key = chrome_options[:args] ? :args : 'args'
         chrome_options[args_key].delete_if {|d| d.include?("user-agent=")}
