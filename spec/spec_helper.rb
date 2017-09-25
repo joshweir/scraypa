@@ -33,17 +33,15 @@ RSpec.configure do |config|
   end
 
   def expect_setup_agent_to_destruct_tor
-    Scraypa.tor_process = double("tor_process")
-    #Scraypa.tor_ip_control = double("tor_ip_control")
-    #Scraypa.tor_proxy = double("tor_proxy")
+    Scraypa.tor_process = double(:tor_process)
     expect(Scraypa.tor_process).to receive(:stop)
     expect(TorManager::TorProcess).to receive(:stop_obsolete_processes)
   end
 
   def expect_setup_agent_to_initialize_tor_with expected_tor_options={}
-    new_tor_process = double("new_tor_process")
-    new_tor_proxy = double("new_tor_proxy")
-    new_tor_ip_control = double("new_tor_ip_control")
+    new_tor_process = double(:new_tor_process)
+    new_tor_proxy = double(:new_tor_proxy)
+    new_tor_ip_control = double(:new_tor_ip_control)
     expect(TorManager::TorProcess)
         .to receive(:new)
                 .with(expected_tor_options)

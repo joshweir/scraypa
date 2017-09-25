@@ -2,7 +2,7 @@ require "spec_helper"
 
 module Scraypa
   describe VisitCapybaraPoltergeist do
-    let(:nodriver) { VisitCapybaraPoltergeist.new(Configuration.new) }
+    let(:nodriver) { VisitCapybaraPoltergeist.new(config: Configuration.new) }
 
     it "raises exception when valid poltergeist driver is not specified" do
       expect{nodriver}.to raise_error Scraypa::CapybaraDriverUnsupported
@@ -29,19 +29,24 @@ module Scraypa
     end
 
     describe "#execute" do
-      context "when instantiated with config.tor and config.tor_proxy" do
+      context "when instantiated with config.tor and tor_proxy" do
         it "executes through the tor proxy block" do
           config = Configuration.new
           config.driver = :poltergeist
           config.tor = true
           config.tor_options = {tor_port: 9050}
-          config.tor_proxy = double("tor_proxy")
+          tor_proxy = double(:tor_proxy)
           params = {method: :get, url: "http://example.com"}
           expect_capybara_driver_setup_with_driver :poltergeisttor9050
-          expect(config.tor_proxy).to receive(:proxy).and_yield
+          expect(tor_proxy).to receive(:proxy).and_yield
           expect(Capybara).to receive(:visit).with(params[:url])
           expect(Capybara).to receive(:page)
-          VisitCapybaraPoltergeist.new(config).execute params
+          driver_resetter = double(:driver_resetter, reset_if_nth_request: '')
+          VisitCapybaraPoltergeist
+              .new(config: config,
+                   tor_proxy: tor_proxy,
+                   driver_resetter: driver_resetter).execute params
+          expect(driver_resetter).to have_received(:reset_if_nth_request)
         end
       end
 
@@ -49,13 +54,17 @@ module Scraypa
         it "doesn't execute through the tor proxy block" do
           config = Configuration.new
           config.driver = :poltergeist
-          config.tor_proxy = double("tor_proxy")
+          tor_proxy = double(:tor_proxy)
           params = {method: :get, url: "http://example.com"}
           expect_capybara_driver_setup_with_driver :poltergeist
-          expect(config.tor_proxy).to_not receive(:proxy).and_yield
+          expect(tor_proxy).to_not receive(:proxy).and_yield
           expect(Capybara).to receive(:visit).with(params[:url])
           expect(Capybara).to receive(:page)
-          VisitCapybaraPoltergeist.new(config).execute params
+          driver_resetter = double(:driver_resetter, reset_if_nth_request: '')
+          VisitCapybaraPoltergeist.new(config: config,
+                                       tor_proxy: tor_proxy,
+                                       driver_resetter: driver_resetter).execute params
+          expect(driver_resetter).to have_received(:reset_if_nth_request)
         end
       end
 
@@ -64,7 +73,7 @@ module Scraypa
                "with the request params" do
           config = Configuration.new
           config.driver = :poltergeist
-          config.user_agent_retriever = double("user_agent_retriever")
+          user_agent_retriever = double(:user_agent_retriever)
           params = {
               method: :get,
               url: "http://example.com",
@@ -73,7 +82,7 @@ module Scraypa
               }
           }
           expect_capybara_driver_setup_with_driver :poltergeist
-          expect(config.user_agent_retriever)
+          expect(user_agent_retriever)
               .to receive(:user_agent)
                       .and_return("agent1")
           expect(Capybara)
@@ -81,12 +90,15 @@ module Scraypa
                       .with("User-Agent" => "agent1")
           expect(Capybara).to receive(:visit).with(params[:url])
           expect(Capybara).to receive(:page)
-          VisitCapybaraPoltergeist.new(config).execute params
+          VisitCapybaraPoltergeist
+              .new(config: config,
+                   user_agent_retriever: user_agent_retriever).execute params
         end
       end
     end
+
     def expect_capybara_driver_setup_with_driver driver
-      app = double("app")
+      app = double(:app)
       expect(Capybara).to receive(:register_driver)
                               .with(driver)
                               .and_yield(app)

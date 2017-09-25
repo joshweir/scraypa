@@ -13,12 +13,19 @@ module Scraypa
     it "sets up the capybara driver on initialization" do
       if config.driver == :headless_chromium
         expect_headless_chromium_reset
-        expect_headless_chromium_ua_retrieved config, params[:user_agent]
+        if config.user_agent
+          user_agent_retriever = double(:user_agent_retriever)
+          expect(user_agent_retriever)
+              .to receive(:user_agent)
+                      .and_return(params[:user_agent])
+        end
+        #expect_headless_chromium_ua_retrieved config, params[:user_agent]
         expect_headless_chromium_setup_driver config,
                                               params[:expected_driver_name],
                                               params[:user_agent]
       end
-      subject = VisitCapybaraHeadlessChromium.new(config)
+      subject = VisitCapybaraHeadlessChromium.new(config: config,
+                                                  user_agent_retriever: user_agent_retriever)
       expect(subject).to be_an_instance_of VisitCapybaraHeadlessChromium
       expect(subject.kind_of?(VisitInterface)).to be_truthy
       if config.driver == :headless_chromium

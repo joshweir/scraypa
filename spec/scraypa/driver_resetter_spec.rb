@@ -35,8 +35,8 @@ module Scraypa
         it "calls capybara reset_sessions! and restarts the session driver" do
           allow(Capybara).to receive(:current_driver).and_return(:poltergeist)
           expect(Capybara).to receive(:reset_sessions!)
-          session_name = double("session_name")
-          session = double("session")
+          session_name = double(:session_name)
+          session = double(:session)
           expect(Capybara).to receive_message_chain("session_pool.each")
                                   .and_yield(session_name, session)
           expect(session_name).to receive(:include?).with('poltergeist').and_return(true)
@@ -65,8 +65,8 @@ module Scraypa
         it "calls capybara reset_sessions! and restarts the session driver" do
           allow(Capybara).to receive(:current_driver).and_return(:headless_chromium)
           expect(Capybara).to receive(:reset_sessions!)
-          session_name = double("session_name")
-          session = double("session")
+          session_name = double(:session_name)
+          session = double(:session)
           expect(Capybara).to receive_message_chain("session_pool.each")
                                   .and_yield(session_name, session)
           expect(session_name).to receive(:include?).with('headless_chromium').and_return(true)

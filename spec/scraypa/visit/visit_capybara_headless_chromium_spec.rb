@@ -2,7 +2,7 @@ require "spec_helper"
 
 module Scraypa
   describe VisitCapybaraHeadlessChromium do
-    let(:nodriver) { VisitCapybaraHeadlessChromium.new(Configuration.new) }
+    let(:nodriver) { VisitCapybaraHeadlessChromium.new(config: Configuration.new) }
 
     it "raises exception when valid headless_chromium driver is not specified" do
       expect{nodriver}.to raise_error Scraypa::CapybaraDriverUnsupported
@@ -57,14 +57,16 @@ module Scraypa
         }
         params = {method: :get, url: "http://example.com"}
         expect_headless_chromium_reset
-        expect_headless_chromium_ua_retrieved config
         expect_headless_chromium_setup_driver config, :headless_chromium
         expect(Capybara).to receive(:visit).with(params[:url])
         expect(Capybara).to receive(:page)
-        VisitCapybaraHeadlessChromium.new(config).execute params
+        driver_resetter = double(:driver_resetter, reset_if_nth_request: '')
+        VisitCapybaraHeadlessChromium.new(config: config,
+                                          driver_resetter: driver_resetter).execute params
+        expect(driver_resetter).to have_received(:reset_if_nth_request)
       end
 
-      context "when config.user_agent_retriever is specified" do
+      context "when @user_agent_retriever is specified" do
         it "will register a new driver if user agent has changed since last visit" do
           config = Configuration.new
           config.driver = :headless_chromium
@@ -83,13 +85,19 @@ module Scraypa
               method: :get, url: "http://example.com",
           }
           expect_headless_chromium_reset
-          expect_headless_chromium_ua_retrieved config, 'agent a'
+          user_agent_retriever = double(:user_agent_retriever)
+          expect(user_agent_retriever)
+              .to receive(:user_agent)
+                      .and_return('agent a')
           expect_headless_chromium_setup_driver config, :headless_chromiumua0, 'agent a'
           expect(Capybara).to receive(:visit).with(params[:url]).twice
           expect(Capybara).to receive(:page).twice
-          hc = VisitCapybaraHeadlessChromium.new(config)
+          hc = VisitCapybaraHeadlessChromium.new(config: config,
+                                                 user_agent_retriever: user_agent_retriever)
           hc.execute params
-          expect_headless_chromium_ua_retrieved config, 'agent b'
+          expect(user_agent_retriever)
+              .to receive(:user_agent)
+                      .and_return('agent b')
           expect_headless_chromium_setup_driver config, :headless_chromiumua1, 'agent b'
           hc.execute params
         end
@@ -98,10 +106,10 @@ module Scraypa
 
     def expect_headless_chromium_reset
       expect(Capybara).to receive(:reset_sessions!)
-      session_name = double("session_name")
-      session = double("session")
-      k = double("k")
-      v = double("v")
+      session_name = double(:session_name)
+      session = double(:session)
+      k = double(:k)
+      v = double(:v)
       #had to allow instead of expect here because this occurs twice and receive_message_chain
       #cannot be chained with exactly(2).times
       allow(Capybara).to receive_message_chain("session_pool.each").and_yield(session_name, session)
@@ -110,18 +118,9 @@ module Scraypa
       allow(Capybara).to receive_message_chain("drivers.delete_if").and_yield(k,v)
     end
 
-    def expect_headless_chromium_ua_retrieved config, user_agent_retrieved=nil
-      if config.user_agent
-        config.user_agent_retriever = double("user_agent_retriever")
-        expect(config.user_agent_retriever)
-            .to receive(:user_agent)
-                    .and_return(user_agent_retrieved)
-      end
-    end
-
     def expect_headless_chromium_setup_driver config, expected_driver_name, user_agent_retrieved=nil
       if config.driver == :headless_chromium
-        app = double("app")
+        app = double(:app)
         allow(Capybara).to receive_message_chain("drivers.keys.include?")
         expect(Capybara).to receive(:register_driver)
                                 .with(expected_driver_name)

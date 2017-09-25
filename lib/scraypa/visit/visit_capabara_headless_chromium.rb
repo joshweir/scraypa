@@ -2,9 +2,11 @@ module Scraypa
   include Capybara::DSL
 
   class VisitCapybaraHeadlessChromium < VisitInterface
-    def initialize *args
-      super(*args)
-      @config = args[0]
+    def initialize params={}
+      super(params)
+      @config = params[:config]
+      @driver_resetter = params[:driver_resetter]
+      @user_agent_retriever = params[:user_agent_retriever]
       reset_and_setup_driver
     end
 
@@ -18,12 +20,13 @@ module Scraypa
       update_user_agent_if_changed if @has_visited
       @has_visited = true
       Capybara.visit params[:url]
+      @driver_resetter.reset_if_nth_request if @driver_resetter
       Capybara.page
     end
 
     def update_user_agent_if_changed
-      if @config.user_agent_retriever
-        new_user_agent = @config.user_agent_retriever.user_agent
+      if @user_agent_retriever
+        new_user_agent = @user_agent_retriever.user_agent
         update_user_agent_and_setup_driver new_user_agent if
             @current_user_agent != new_user_agent
       end

@@ -1,10 +1,10 @@
-# Scraypa (in development - not ready to be used)
+# Scraypa
 
 A Ruby gem to scrape web content with configuration options including: 
  
 1. [Javscript support](#javascript-support)
 2. [The Onion Router (Tor)](#tor)
-3. [Disguise](#disguise)
+3. [Disguise](#disguise) (TODO)
 
 Scraypa is essentially a wrapper for the light-weight 
 [Rest Client](https://github.com/rest-client/rest-client) (if you dont require javascript support)

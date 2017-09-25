@@ -10,11 +10,6 @@ RSpec.describe Scraypa do
   describe ".configure" do
     it "initializes a new Scraypa::Configuration instance updating" +
            " properties from the configure block" do
-      #allow(TorManager::TorProcess)
-      #    .to receive(:tor_running_on?)
-      #            .with(port: 9050,
-      #                  parent_pid: Process.pid)
-      #            .and_return(false)
       scraypa_reset_mock_shell
       Scraypa.reset
       expect(Scraypa).to receive(:setup_agent)

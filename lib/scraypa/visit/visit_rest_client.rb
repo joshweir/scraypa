@@ -2,13 +2,15 @@ require 'rest-client'
 
 module Scraypa
   class VisitRestClient < VisitInterface
-    def initialize *args
-      super(*args)
-      @config = args[0]
+    def initialize params={}
+      super(params)
+      @config = params[:config]
+      @tor_proxy = params[:tor_proxy]
+      @user_agent_retriever = params[:user_agent_retriever]
     end
 
     def execute params={}
-      @config.tor && @config.tor_proxy ?
+      @config.tor && @tor_proxy ?
         visit_get_response_through_tor(params) :
         visit_get_response(params)
     end
@@ -16,7 +18,7 @@ module Scraypa
     private
 
     def visit_get_response_through_tor params={}
-      @config.tor_proxy.proxy do
+      @tor_proxy.proxy do
         return visit_get_response params
       end
     end
@@ -26,10 +28,10 @@ module Scraypa
     end
 
     def add_user_agent_to params
-      @config.user_agent_retriever ?
+      @user_agent_retriever ?
           params.merge({
             headers: {
-                user_agent: @config.user_agent_retriever.user_agent
+                user_agent: @user_agent_retriever.user_agent
             }
           }) : params
     end

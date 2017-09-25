@@ -6,15 +6,18 @@ module Scraypa
   include Capybara::DSL
 
   class VisitCapybaraPoltergeist < VisitInterface
-    def initialize *args
-      super(*args)
-      @config = args[0]
+    def initialize params={}
+      super(params)
+      @config = params[:config]
+      @tor_proxy = params[:tor_proxy]
+      @driver_resetter = params[:driver_resetter]
+      @user_agent_retriever = params[:user_agent_retriever]
       setup_driver
       @current_user_agent = nil
     end
 
     def execute params={}
-      @config.tor && @config.tor_proxy ?
+      @config.tor && @tor_proxy ?
         visit_get_response_through_tor(params) :
         visit_get_response(params)
     end
@@ -22,7 +25,7 @@ module Scraypa
     private
 
     def visit_get_response_through_tor params={}
-      @config.tor_proxy.proxy do
+      @tor_proxy.proxy do
         return visit_get_response params
       end
     end
@@ -30,12 +33,13 @@ module Scraypa
     def visit_get_response params={}
       update_user_agent_if_changed
       Capybara.visit params[:url]
+      @driver_resetter.reset_if_nth_request if @driver_resetter
       Capybara.page
     end
 
     def update_user_agent_if_changed
-      if @config.user_agent_retriever
-        new_user_agent = @config.user_agent_retriever.user_agent
+      if @user_agent_retriever
+        new_user_agent = @user_agent_retriever.user_agent
         if @current_user_agent != new_user_agent
           @current_user_agent = new_user_agent
           Capybara.page.driver.add_headers(

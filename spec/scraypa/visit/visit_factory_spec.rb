@@ -10,14 +10,14 @@ module Scraypa
           c.driver = :poltergeist
           c
         }
-        let(:subject) { VisitFactory.build(config) }
+        let(:subject) { VisitFactory.build(config: config) }
         it "instantiates a VisitCapybaraPoltergeist object" do
           expect(subject.class).to eq VisitCapybaraPoltergeist
         end
 
         it "passes the params to the instantiated object" do
-          expect(VisitCapybaraPoltergeist).to receive(:new).with(config)
-          VisitFactory.build(config)
+          expect(VisitCapybaraPoltergeist).to receive(:new).with(config: config)
+          VisitFactory.build(config: config)
         end
       end
 
@@ -31,14 +31,14 @@ module Scraypa
           }
           c
         }
-        let(:subject) { VisitFactory.build(config) }
+        let(:subject) { VisitFactory.build(config: config) }
         it "instantiates a VisitCapybaraHeadlessChromium object" do
           expect(subject.class).to eq VisitCapybaraHeadlessChromium
         end
 
         it "passes the params to the instantiated object" do
-          expect(VisitCapybaraHeadlessChromium).to receive(:new).with(config)
-          VisitFactory.build(config)
+          expect(VisitCapybaraHeadlessChromium).to receive(:new).with(config: config)
+          VisitFactory.build(config: config)
         end
       end
 
@@ -51,7 +51,7 @@ module Scraypa
         }
         it "raises CapybaraDriverUnsupported exception" do
           expect{
-            VisitFactory.build(config)
+            VisitFactory.build(config: config)
           }.to raise_error Scraypa::CapybaraDriverUnsupported,
                            /Currently no support for capybara driver: dummydriver/
         end
@@ -59,14 +59,14 @@ module Scraypa
 
       context "when not config.use_capybara" do
         let(:config) { c = Configuration.new }
-        let(:subject) { VisitFactory.build(config) }
+        let(:subject) { VisitFactory.build(config: config) }
         it "instantiates a VisitRestClient object" do
           expect(subject.class).to eq VisitRestClient
         end
 
         it "passes the params to the instantiated object" do
-          expect(VisitRestClient).to receive(:new).with(config)
-          VisitFactory.build(config)
+          expect(VisitRestClient).to receive(:new).with(config: config)
+          VisitFactory.build(config: config)
         end
       end
     end

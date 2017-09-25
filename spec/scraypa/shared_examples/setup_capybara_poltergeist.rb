@@ -10,7 +10,7 @@ module Scraypa
     }
 
     it "sets up the capybara driver on initialization" do
-      app = double("app")
+      app = double(:app)
       if config.driver == :poltergeist
         expect(Capybara).to receive(:register_driver)
                               .with(params[:expected_driver_name])
@@ -22,7 +22,7 @@ module Scraypa
         expect(Capybara::Poltergeist::Driver).to_not receive(:new)
       end
 
-      subject = VisitCapybaraPoltergeist.new(config)
+      subject = VisitCapybaraPoltergeist.new(config: config)
       expect(subject).to be_an_instance_of VisitCapybaraPoltergeist
       expect(subject.kind_of?(VisitInterface)).to be_truthy
       if config.driver == :poltergeist

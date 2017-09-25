@@ -22,7 +22,7 @@ module Scraypa
 
   class << self
     attr_accessor :agent, :tor_process, :tor_ip_control, :tor_proxy,
-                  :throttle, :user_agent_retriever
+                  :throttle, :user_agent_retriever, :driver_resetter
 
     def configuration
       @configuration ||= Configuration.new
@@ -75,12 +75,13 @@ module Scraypa
     def setup_scraypa
       setup_user_agent
       setup_tor
+      setup_driver_resetter
       setup_agent
       setup_throttle
     end
 
     def setup_user_agent
-      @user_agent_retriever = @configuration.user_agent_retriever =
+      @user_agent_retriever =
           @configuration.user_agent ?
               UserAgentFactory.build(
                   merge_user_agent_list_limit_for_chrome(
@@ -132,7 +133,7 @@ module Scraypa
 
     def initialize_tor params={}
       @tor_process = TorManager::TorProcess.new params || {}
-      @tor_proxy = @configuration.tor_proxy =
+      @tor_proxy =
           TorManager::Proxy.new tor_process: @tor_process
       @tor_ip_control = TorManager::IpAddressControl.new(
           tor_process: @tor_process, tor_proxy: @tor_proxy)
@@ -143,12 +144,21 @@ module Scraypa
       @tor_process.stop if @tor_process
       TorManager::TorProcess.stop_obsolete_processes
       @tor_ip_control = nil
-      @tor_proxy = @configuration.tor_proxy = nil
+      @tor_proxy = nil
       @tor_process = nil
     end
 
+    def setup_driver_resetter
+      @driver_resetter =
+          DriverResetter.new(
+              @configuration.reset_driver_every_n_requests)
+    end
+
     def setup_agent
-      @agent = Scraypa::VisitFactory.build(@configuration)
+      @agent = Scraypa::VisitFactory
+                   .build(config: @configuration,
+                          tor_proxy: @tor_proxy,
+                          driver_resetter: @driver_resetter)
     end
 
     def setup_throttle

@@ -57,23 +57,6 @@ RSpec.shared_examples "a web agent, user agent, tor, throttle setter-upper-er" d
         Scraypa.configure { |c|
           c.tor = true
         }
-
-=begin
-        allow(TorManager::TorProcess)
-            .to receive(:tor_running_on?)
-                    .with(port: 9050,
-                          parent_pid: Process.pid)
-                    .and_return(false)
-        destruct_tor
-        initialize_tor(@configuration.tor_options)
-        Scraypa.reset
-        Scraypa.configure { |c| c.tor = true }
-        config = Scraypa.configuration
-        expect(config.tor).to be_truthy
-        expect(config.tor_options[:tor_port]).to eq 9050
-        expect(config.tor_options[:control_port]).to eq 50500
-        expect(config.use_capybara).to be_nil
-=end
       end
 
       it "will not reset the tor process if it is already running " +
@@ -143,15 +126,6 @@ RSpec.shared_examples "a web agent, user agent, tor, throttle setter-upper-er" d
         c.user_agent = {list: 'agent1'}
       }
       expect(Scraypa.user_agent_retriever.class).to eq Scraypa::UserAgentIterator
-    end
-
-    it "assigns the user agent retriever instance to " +
-           "Scraypa.configuration.user_agent_retriever" do
-      allow(Scraypa).to receive(:destruct_tor)
-      Scraypa.configure { |c|
-        c.user_agent = {list: 'agent1'}
-      }
-      expect(Scraypa.configuration.user_agent_retriever.class).to eq Scraypa::UserAgentIterator
     end
   end
 
