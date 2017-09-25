@@ -158,7 +158,8 @@ module Scraypa
       @agent = Scraypa::VisitFactory
                    .build(config: @configuration,
                           tor_proxy: @tor_proxy,
-                          driver_resetter: @driver_resetter)
+                          driver_resetter: @driver_resetter,
+                          user_agent_retriever: @user_agent_retriever)
     end
 
     def setup_throttle

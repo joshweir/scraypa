@@ -150,7 +150,8 @@ RSpec.describe Scraypa do
                       .with(method: :get,
                             url: "http://example.com",
                             headers: {user_agent: 'my user agent'})
-          Scraypa.visit method: :get, url: "http://example.com"
+          Scraypa.visit method: :get,
+                        url: "http://example.com"
         end
       end
     end

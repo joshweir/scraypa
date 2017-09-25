@@ -9,6 +9,7 @@ def expect_common_aliases_and_changes_after_n_requests params
                    }))
   Scraypa.visit method: :get, url: "http://bot.whatismyipaddress.com/"
   common_agents = Scraypa::USER_AGENT_LIST.values
+  expect(Scraypa.user_agent_retriever).to_not be_nil
   agent_before = Scraypa.user_agent
   expect(agent_before).to_not be_nil
   expect(common_agents).to include agent_before
