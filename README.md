@@ -1,6 +1,6 @@
 # Scraypa
 
-A Ruby gem to scrape web content with some features including: 
+A Ruby gem to scrape web content with some of the features including: 
  
 1. [Using Capybara (for Javscript support)](#using-capybara-for-javascript-support)
 2. [The Onion Router (Tor)](#tor)
