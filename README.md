@@ -52,7 +52,12 @@ For ubuntu I did this:
 
 ### Install Scraypa
 
-Add this line to your application's Gemfile:
+Firstly install sigar: 
+
+    $ gem install sigar -- --with-cppflags="-fgnu89-inline"
+
+Then,
+add this line to your application's Gemfile:
 
 ```ruby
 gem 'scraypa'
