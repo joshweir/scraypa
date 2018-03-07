@@ -218,7 +218,13 @@ Scraypa.configure do |config|
   config.driver_options = {
     :phantomjs => Phantomjs.path,
     :js_errors => false,
-    :phantomjs_options => ["--web-security=true"]
+    :phantomjs_options => [
+      "--web-security=true", 
+      "--ssl-protocol=any", 
+      "--proxy-type=socks5",
+      #ensure --proxy socket matches the config.tor_options above
+      "--proxy=127.0.0.1:9050" 
+    ]
   }
 end
 
