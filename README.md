@@ -1,4 +1,5 @@
 # Scraypa
+[![Build Status](https://travis-ci.org/joshweir/scraypa.svg?branch=master)](https://travis-ci.org/joshweir/scraypa)
 
 A Ruby gem to scrape web content with some of the features including: 
  
