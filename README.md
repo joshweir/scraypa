@@ -1,20 +1,20 @@
 # Scraypa
-[![Build Status](https://travis-ci.org/joshweir/scraypa.svg?branch=master)](https://travis-ci.org/joshweir/scraypa)
+[![Build Status](https://travis-ci.org/joshweir/scraypa.svg?branch=master)](https://travis-ci.org/joshweir/scraypa) [![Coverage Status](https://coveralls.io/repos/github/joshweir/scraypa/badge.svg?branch=master)](https://coveralls.io/github/joshweir/scraypa?branch=master)
 
-A Ruby gem to scrape web content with some of the features including: 
- 
+A Ruby gem to scrape web content with some of the features including:
+
 1. [Using Capybara (for Javscript support)](#using-capybara-for-javascript-support)
 2. [The Onion Router (Tor)](#tor)
 
-Scraypa is a wrapper for the light-weight 
+Scraypa is a wrapper for the light-weight
 [Rest Client](https://github.com/rest-client/rest-client) (if you dont require javascript support)
- or [Capybara](https://github.com/teamcapybara/capybara) (for Javascript support). 
+ or [Capybara](https://github.com/teamcapybara/capybara) (for Javascript support).
 
-## Why? 
+## Why?
 
-A web scraper that can be configured to support javascript and/or Tor. If javascript is not required, 
+A web scraper that can be configured to support javascript and/or Tor. If javascript is not required,
  it will use the lighter Rest Client. Scraypa is an attempt to remove the complexities associated to web agent setup. In its simplest form a request would look like this:
- 
+
  ```ruby
 require 'scraypa'
 response = Scraypa.visit(method: :get, url: "http://example.com")
@@ -36,24 +36,24 @@ If you want to use Tor, install tor:
 
 ### Install Headless Chrome (optional)
 
-If you want to use `:headless_chrome` with capybara, install 
-headless chrome by following instructions here: 
+If you want to use `:headless_chrome` with capybara, install
+headless chrome by following instructions here:
 
 http://blog.faraday.io/headless-chromium/
 
-For ubuntu I did this: 
+For ubuntu I did this:
 
-1. Install chromium: 
+1. Install chromium:
 
         git clone https://github.com/scheib/chromium-latest-linux.git
         cd chromium-latest-linux
         ./update-and-run.sh
-        
+
 2. Install chromedriver by [following the build instructions](https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md).
 
 ### Install Scraypa
 
-Firstly install sigar: 
+Firstly install sigar:
 
     $ gem install sigar -- --with-cppflags="-fgnu89-inline"
 
@@ -84,17 +84,17 @@ response.code
 response.to_str
 #-> http://example.com content
 ```    
-    
+
 By default Scraypa uses the rest-client gem which does
 not support Javascript. The `#visit` method wraps the  
 [`RestClient#execute` method](https://github.com/rest-client/rest-client#passing-advanced-options)
-so you can pass in whatever `RestClient#execute` will accept, 
+so you can pass in whatever `RestClient#execute` will accept,
 for example:
 
 ```ruby
-Scraypa.visit(method: :get, 
+Scraypa.visit(method: :get,
               url: 'http://example.com/resource',
-              timeout: 10, 
+              timeout: 10,
               headers: {params: {foo: 'bar'}})
 
 ➔ GET http://example.com/resource?foo=bar
@@ -117,7 +117,7 @@ Scraypa.configure do |config|
   }
   #to reset the capybara driver every 7 requests (defaults to 5):
   #config.reset_driver_every_n_requests = 7
-      
+
   #or you could instead use headless_chrome:
   #config.driver = :headless_chromium
   #config.driver_options = {
@@ -130,7 +130,7 @@ Scraypa.configure do |config|
   #  )
   #}
 end
-    
+
 #when using capybara, just the url parameter is required:
 response = Scraypa.visit(url: "http://example.com")
 
@@ -138,7 +138,7 @@ response = Scraypa.visit(url: "http://example.com")
 response.status_code
 #-> 200
 response.text
-#-> http://example.com content 
+#-> http://example.com content
 
 #execute some javascript:
 response.execute_script(
@@ -147,13 +147,13 @@ response.text
 #-> "changed content"
 ```
 
-The above shows the `reset_driver_every_n_requests` config parameter which defaults to 5. This will ensure that every n requests the Capybara driver is reset. This prevents the Capybara drivers from going crazy with memory usage. 
+The above shows the `reset_driver_every_n_requests` config parameter which defaults to 5. This will ensure that every n requests the Capybara driver is reset. This prevents the Capybara drivers from going crazy with memory usage.
 
 ### Tor
 
-If configured to use Tor (`config.tor = true`), Scraypa will spawn and manage a Tor process the proxy through with tor settings optionally specified in `config.tor_options`. Scraypa uses [TorManager](https://github.com/joshweir/tormanager) which in turn uses [Eye](https://github.com/kostya/eye) to spawn, monitor and stop the Tor process. 
+If configured to use Tor (`config.tor = true`), Scraypa will spawn and manage a Tor process the proxy through with tor settings optionally specified in `config.tor_options`. Scraypa uses [TorManager](https://github.com/joshweir/tormanager) which in turn uses [Eye](https://github.com/kostya/eye) to spawn, monitor and stop the Tor process.
 
-If `config.tor_options` are not specified, the following defaults are used: 
+If `config.tor_options` are not specified, the following defaults are used:
 
 | `tor_options` | Default Value | Description |
 | --- | --- | --- |
@@ -176,16 +176,16 @@ If `config.tor_options` are not specified, the following defaults are used:
 
 An example of using `config.tor_options` is included in the example `Scraypa.configure` blocks below.
 
-Instruct Scraypa to use Tor with the default Rest Client: 
+Instruct Scraypa to use Tor with the default Rest Client:
 
 ```ruby
 Scraypa.configure do |config|
   config.tor = true
-  #optionally specify the tor_options, any tor_options not included 
+  #optionally specify the tor_options, any tor_options not included
   #will use the defaults specified in the table above
   #config.tor_options = {
-  #  tor_port: 9051, 
-  #  control_port: 50501, 
+  #  tor_port: 9051,
+  #  control_port: 50501,
   #  pid_dir: '/my/pid/dir',
   #  log_dir: '/my/log/dir',
   #  tor_data_dir: '/my/tor/datadir',
@@ -206,10 +206,10 @@ Instruct Scraypa to use Tor with Capybara Poltergeist:
 ```ruby
 Scraypa.configure do |config|
   config.tor = true
-  #optionally specify the tor_options, any tor_options not included 
+  #optionally specify the tor_options, any tor_options not included
   #will use the defaults specified in the table above
   #config.tor_options = {
-  #  tor_port: 9052, 
+  #  tor_port: 9052,
   #  control_port: 50502
   #}
 
@@ -220,11 +220,11 @@ Scraypa.configure do |config|
     :phantomjs => Phantomjs.path,
     :js_errors => false,
     :phantomjs_options => [
-      "--web-security=true", 
-      "--ssl-protocol=any", 
+      "--web-security=true",
+      "--ssl-protocol=any",
       "--proxy-type=socks5",
       #ensure --proxy socket matches the config.tor_options above
-      "--proxy=127.0.0.1:9050" 
+      "--proxy=127.0.0.1:9050"
     ]
   }
 end
@@ -236,7 +236,7 @@ Scraypa does not support the use of Tor with Capybara Headless Chromium (couldn'
 
 ### User Agents
 
-Scraypa has a number of options for using user agents: 
+Scraypa has a number of options for using user agents:
 
 1. Don't specify a user agent (default option).
 2. A list of 17 common user agents.
@@ -311,13 +311,13 @@ response = Scraypa.visit(url: "http://example.com")
 
 ### Throttle
 
-Using the `config.throttle_seconds` will throttle Scraypa requests: 
+Using the `config.throttle_seconds` will throttle Scraypa requests:
 
 ```ruby
 Scraypa.configure do |config|
   #throttle every request by 0.4 seconds
   config.throttle_seconds = 0.4
-  #a throttle_seconds range can be provided in which each request 
+  #a throttle_seconds range can be provided in which each request
   #will be throttled by a random float seconds between :from and :to
   #config.throttle_seconds = {from: 0.4, to: 3.5}
 end
@@ -325,7 +325,7 @@ end
 response = Scraypa.visit(method: :get, url: "http://example.com")
 
 ```
-As shown in the above code, a single value `throttle_seconds` can be specified which is the number of seconds to throttle requests by, or a hash range (eg: `{from: 0.4, to: 3.5}`) in which a random number of seconds between the `:from` and `:to` values will be used to throttle each request. 
+As shown in the above code, a single value `throttle_seconds` can be specified which is the number of seconds to throttle requests by, or a hash range (eg: `{from: 0.4, to: 3.5}`) in which a random number of seconds between the `:from` and `:to` values will be used to throttle each request.
 
 By default, Scraypa uses no throttling (ie. `config.throttle_seconds = 0`).
 

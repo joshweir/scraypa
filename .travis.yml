@@ -6,3 +6,4 @@ script: rspec --pattern spec/\*\*\{,/\*/\*\*\}/\*_spec.rb --exclude-pattern **/f
 before_install:
   - gem install bundler -v 1.14.6
   - gem install sigar -- --with-cppflags="-fgnu89-inline"
+cache: bundler
