@@ -1,3 +1,5 @@
+require 'coveralls'
+Coveralls.wear!
 require "bundler/setup"
 require "scraypa"
 require 'rspec'
@@ -5,6 +7,7 @@ require 'capybara/rspec'
 require 'webmock/rspec'
 require 'billy/capybara/rspec'
 require 'socket'
+
 Dir.glob(File.join(File.expand_path('../..', __FILE__),
                    "spec/scraypa/shared_examples/**/*.rb"))
     .each {|f| require f}

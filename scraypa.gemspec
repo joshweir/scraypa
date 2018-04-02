@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "gem-release"
   spec.add_development_dependency "rb-fsevent"
   spec.add_development_dependency "guard-rspec"
+  spec.add_development_dependency "coveralls"
   spec.add_dependency "activesupport"
   spec.add_dependency "rest-client"
   spec.add_dependency "useragents", "0.1.4"
